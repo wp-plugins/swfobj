@@ -35,7 +35,7 @@ This section describes how to install the plugin and get it working.
 
 1. Upload the `swfobj` directory and its contents to the `/wp-content/plugins/swfobj/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Set the default options for your embedded objects in the `Options > SwfObj` page.
+3. Set the default options for your embedded objects in the `Settings > SwfObj` page.
 3. Use the swfobj shortcode in your posts.
 
 For detailed instructions including a list of available attributes, visit the [plugin website](http://orangesplotch.com/blog/swfobj/ "plugin webpage")

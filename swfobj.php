@@ -17,6 +17,8 @@ class SwfObj {
 
 	// Constructor
 	function SWFObj() {
+		load_plugin_textdomain( 'swfobj', PLUGINDIR.'/'.dirname( plugin_basename(__FILE__) ) );
+
 		global $registered_objects;
 		$registered_objects = array();
 	}
@@ -25,7 +27,7 @@ class SwfObj {
 	function get_options() {
 		$admin_options = array( 'height' => '300',
 		                        'width' => '400',
-		                        'alt' => '<p>The Flash plugin is required to view this object.</p>',
+		                        'alt' => '<p>'.__('The Flash plugin is required to view this object.', 'swfobj').'</p>',
 		                        'allowfullscreen' => 'false',
 		                        'required_player_version' => '8.0.0',
 	 	                        'express_install_swf' => get_bloginfo('wpurl').'/wp-content/plugins/swfobj/'.'expressInstall.swf' );
@@ -42,7 +44,7 @@ class SwfObj {
 	function init() {
 		$this->get_options();
 		?>
-		<div class="updated"><p><strong>Options saved.</strong></p></div>
+		<div class="updated"><p><strong><?php _e('SwfObj Initialized', 'swfobj'); ?></strong></p></div>
 		<?php
 	}
 
@@ -140,7 +142,7 @@ class SwfObj {
 			}
 			update_option($this->admin_options_saved, $options);
 			?>
-			<div class="updated"><p><strong>Options Updated.</strong></p></div>
+			<div class="updated"><p><strong><?php _e('Options Updated', 'swfobj'); ?></strong></p></div>
 			<?php
 		}
 
@@ -156,51 +158,51 @@ class SwfObj {
 </style>
 <div class="wrap">
 <form method="post" action="<?php echo str_replace( '%7E', '~', $_SERVER['REQUEST_URI']); ?>">
-<h2>SwfObj Default Settings</h2>
+<h2><?php _e('SwfObj Default Settings', 'swfobj'); ?></h2>
       <input type="hidden" name="options_update" value="1" />
 
       <table class="form-table">
       <tr>
-        <th scope="row" valign="top">Default Width</th>
+        <th scope="row" valign="top"><?php _e('Default Width', 'swfobj'); ?></th>
 	<td><input type="text" name="width" value="<?php echo $options['width']; ?>" size="40" /></td>
-	<td><em>Default width of embedded Flash content.</em></td>
+	<td><em><?php _e('Default width of embedded Flash content.', 'swfobj'); ?></em></td>
       </tr>
       <tr class="odd">
-        <th scope="row" valign="top">Default Height</th>
+        <th scope="row" valign="top"><?php _e('Default Height', 'swfobj'); ?></th>
 	<td><input type="text" name="height" value="<?php echo $options['height']; ?>" size="40" /></td>
-	<td><em>Default height of embedded Flash content.</em></td>
+	<td><em><?php _e('Default height of embedded Flash content.', 'swfobj'); ?></em></td>
       </tr>
       <tr>
-        <th scope="row" valign="top">Alternative Content</th>
+        <th scope="row" valign="top"><?php _e('Alternative Content', 'swfobj'); ?></th>
 	<td><input type="text" name="alt" value="<?php echo $options['alt']; ?>" size="40" /></td>
-	<td><em>Alternative HTML content to display if Flash plugin is not installed in the browser.</em></td>
+	<td><em><?php _e('Alternative HTML content to display if Flash plugin is not installed in the browser.', 'swfobj'); ?></em></td>
       </tr>
       <tr class="odd">
-        <th scope="row" valign="top">Required Flash Player</th>
+        <th scope="row" valign="top"><?php _e('Required Flash Player', 'swfobj'); ?></th>
 	<td><input type="text" name="required_player_version" value="<?php echo $options['required_player_version']; ?>" size="40" /></td>
-	<td><em>Default minimum Flash player required by the browser.</em></td>
+	<td><em><?php _e('Default minimum Flash player required by the browser.', 'swfobj'); ?></em></td>
       </tr>
       <tr>
-        <th scope="row" valign="top">Object CSS Class</th>
+        <th scope="row" valign="top"><?php _e('Object CSS Class', 'swfobj'); ?></th>
 	<td><input type="text" name="class" value="<?php echo $options['class']; ?>" size="40" /></td>
-	<td><em>The CSS class to apply to the embedded Flash object.</em></td>
+	<td><em><?php _e('The CSS class to apply to the embedded Flash object.', 'swfobj'); ?></em></td>
       </tr>
       <tr class="odd">
-        <th scope="row" valign="top">Express Install Swf</th>
+        <th scope="row" valign="top"><?php _e('Express Install Swf', 'swfobj'); ?></th>
 	<td><input type="text" name="express_install_swf" value="<?php echo $options['express_install_swf']; ?>" size="40" /></td>
-	<td><em>Swf shown when viewer needs to upgrade their player.</em></td>
+	<td><em><?php _e('Swf shown when viewer needs to upgrade their player.', 'swfobj'); ?></em></td>
       </tr>
       <tr>
-        <th scope="row" valign="top">Allow Fullscreen Mode</th>
+        <th scope="row" valign="top"><?php _e('Allow Fullscreen Mode', 'swfobj'); ?></th>
 	<td>
-	    <label for="allowfullscreen_yes"><input type="radio" id="allowfullscreen_yes" name="allowfullscreen" value="true"<?php if ($options['allowfullscreen'] == 'true'): ?> checked="checked"<?php endif; ?> /> Yes</label> &nbsp; &nbsp; &nbsp;
-	    <label for="allowfullscreen_no"><input type="radio" id="allowfullscreen_no" name="allowfullscreen" value="false"<?php if ($options['allowfullscreen'] == 'false'): ?> checked="checked"<?php endif; ?> /> No</label>
-	<td><em>Allow fullscreen mode by default.</em></td>
+	    <label for="allowfullscreen_yes"><input type="radio" id="allowfullscreen_yes" name="allowfullscreen" value="true"<?php if ($options['allowfullscreen'] == 'true'): ?> checked="checked"<?php endif; ?> /> <?php _e('Yes', 'swfobj'); ?></label> &nbsp; &nbsp; &nbsp;
+	    <label for="allowfullscreen_no"><input type="radio" id="allowfullscreen_no" name="allowfullscreen" value="false"<?php if ($options['allowfullscreen'] == 'false'): ?> checked="checked"<?php endif; ?> /> <?php _e('No', 'swfobj'); ?></label>
+	<td><em><?php _e('Allow fullscreen mode by default.', 'swfobj'); ?></em></td>
       </tr>
       </table>
 
       <p class="submit">
-      	 <input type="submit" name="Submit" value="Update Defaults" />
+      	 <input type="submit" name="Submit" value="<?php _e('Update Defaults', 'swfobj'); ?>" />
       </p>
 </form>
 </div>
@@ -223,17 +225,13 @@ if (!function_exists("swfobj_ap")) {
             return;
         }
         if (function_exists('add_options_page')) {
-            add_options_page('SwfObj Default Settings', 'SwfObj', 8, basename(__FILE__), array(&$swfobj, 'swfobj_options_page'));
+            add_options_page(__('SwfObj Default Settings', 'swfobj'), 'SwfObj', 8, basename(__FILE__), array(&$swfobj, 'swfobj_options_page'));
         }
     }   
 }
 
-//Actions and Filters
+// Actions and Filters
 if (isset($swfobj)) {
-
-	// Options
-	add_option(required_player_version, required_player_version_default, 'Default Flash player version.');
-	add_option(express_install_swf, express_install_swf_default, 'Default express install swf file.');
 
 	// Actions
 	add_action('wp_head', array(&$swfobj, 'swfobj_header'), 100);
