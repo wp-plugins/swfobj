@@ -15,6 +15,7 @@ This plugin enables inserting flash content into WordPress posts and pages with 
 = Features =
 
 *	Easy install
+*	Upload Flash media using WordPress's native media tools
 *	Insert Flash movie with simple short code
 *	Support most Flash param options including allowFullscreen
 *       Granular level of control allows easy overriding of default options
@@ -36,6 +37,7 @@ This section describes how to install the plugin and get it working.
 1. Upload the `swfobj` directory and its contents to the `/wp-content/plugins/swfobj/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
 3. Set the default options for your embedded objects in the `Settings > SwfObj` page.
+4. Add Flash media using the new Flash media button above the post editor.
 3. Use the swfobj shortcode in your posts.
 
 For detailed instructions including a list of available attributes, visit the [plugin website](http://orangesplotch.com/blog/swfobj/ "plugin webpage")
@@ -66,6 +68,12 @@ For more detailed instructions, visit the [plugin website](http://orangesplotch.
 
 == Version History ==
 
+= Version 0.2 =
+* Flash media button allows uploading and inserting Flash media into posts and pages
+* Flash media tab in the WordPress media library
+* Inserting a Flash object into a post auto generates the proper shortcode. 
+* Added multiple language support
+
 = Version 0.1 =
 * Initial release.
 
@@ -73,4 +81,6 @@ For more detailed instructions, visit the [plugin website](http://orangesplotch.
 No screenshots available yet.
 
 == Frequently Asked Questions ==
-Haven't gotten any questions yet, let alone frequent ones.
+
+= Why isn't it working? I'm using WP 2.3 =
+This plugin uses WordPress's shortcode API. A feature which was added to WordPress in version 2.5. All versions of WordPress prior to this release, unfortunately, are incompatible with this plugin. Sorry.
