@@ -4,7 +4,7 @@ Donate link: http://orangesplotch.com/freelunch
 Tags: embed, flash, flex, shortcode, swf, swfobject
 Requires at least: 2.5
 Tested up to: 2.6
-Stable tag: 0.1
+Stable tag: 0.2
 
 Insert Flash content into WordPress using shortcodes.
 
