@@ -217,7 +217,7 @@ class SwfObj {
 		$media_swfobj_iframe_src = apply_filters('media_swfobj_iframe_src', "$media_upload_iframe_src&amp;type=flash");
 		$media_swfobj_title = __('Add Flash content', 'swfobj');
 
-		echo '<a href="'.$media_swfobj_iframe_src.'&amp;TB_iframe=true&amp;height=500&amp;width=640" class="thickbox" title="'.$media_swfobj_title.'"><img src="http://orangesplotch.com/blog/wp-admin/images/media-button-other.gif" alt="'.$media_swfobj_title.'"></a>';
+		echo '<a href="'.$media_swfobj_iframe_src.'&amp;TB_iframe=true&amp;height=500&amp;width=640" class="thickbox" title="'.$media_swfobj_title.'"><img src="'.get_bloginfo('wpurl').'/wp-content/plugins/swfobj/'.'media-button-flash.gif" alt="'.$media_swfobj_title.'"></a>';
 	}
 
 	function media_upload_flash() {
