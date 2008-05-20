@@ -3,7 +3,7 @@
 Plugin Name: SwfObj
 Plugin URI: http://svn.wp-plugins.org/swfobj/
 Description: Easily insert Flash media with shortcode. Uses the SWF Object 2.0 library for greater browser compatability.
-Version: 0.1
+Version: 0.2
 Author: Matt Carpenter
 Author URI: http://orangesplotch.com/
 */
