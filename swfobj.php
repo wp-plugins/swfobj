@@ -2,8 +2,8 @@
 /*
 Plugin Name: SwfObj
 Plugin URI: http://svn.wp-plugins.org/swfobj/
-Description: Easily insert Flash media with shortcode. Uses the SWF Object 2.0 library for greater browser compatability.
-Version: 0.2
+Description: Easily insert Flash media using the media toolbar and shortcode. Uses the SWF Object 2.0 library for greater browser compatability.
+Version: 0.3
 Author: Matt Carpenter
 Author URI: http://orangesplotch.com/
 */
@@ -269,11 +269,38 @@ class SwfObj {
 			$send_id  = (int) array_shift($keys);
 			$flashobj = $_POST['attachments'][$send_id];
 			
-			$url   = $flashobj['url'];
-			$title = stripslashes( htmlspecialchars ($flashobj['post_title'], ENT_QUOTES));
-			$alt   = stripslashes( htmlspecialchars ($flashobj['post_content'], ENT_QUOTES));
+			$url      = $flashobj['url'];
+			$title    = stripslashes( htmlspecialchars ($flashobj['post_title'], ENT_QUOTES));
+			$alt      = stripslashes( htmlspecialchars ($flashobj['post_content'], ENT_QUOTES));
 
-			$html  = '[swfobj src="'.$url.'"'.( ($alt != '') ? ' alt="'.$alt.'"' : '' ).'] ';
+			// append any additional properties passed to the object.
+			$extras   = '';
+			if ( !empty($flashobj['width']) && intval($flashobj['width']) ) {
+				$extras .= ' width="'.stripslashes( htmlspecialchars ($flashobj['width'], ENT_QUOTES)).'"';
+			}
+			if ( !empty($flashobj['height']) && intval($flashobj['height']) ) {
+				$extras .= ' height="'.stripslashes( htmlspecialchars ($flashobj['height'], ENT_QUOTES)).'"';
+			}
+			if ( !empty($flashobj['id']) ) {
+				$extras .= ' id="'.stripslashes( htmlspecialchars ($flashobj['id'], ENT_QUOTES)).'"';
+			}
+			if ( !empty($flashobj['name']) ) {
+				$extras .= ' name="'.stripslashes( htmlspecialchars ($flashobj['name'], ENT_QUOTES)).'"';
+			}
+			if ( !empty($flashobj['class']) ) {
+				$extras .= ' class="'.stripslashes( htmlspecialchars ($flashobj['class'], ENT_QUOTES)).'"';
+			}
+			if ( isset($flashobj['align']) ) {
+				$extras .= ' align="'.$flashobj['align'].'"';
+			}
+			if ( isset($flashobj['allowfullscreen']) ) {
+				$extras .= ' allowfullscreen="'.$flashobj['allowfullscreen'].'"';
+			}
+			if ( !empty($flashobj['required_player_version']) ) {
+				$extras .= ' required_player_version="'.stripslashes( htmlspecialchars ($flashobj['required_player_version'], ENT_QUOTES)).'"';
+			}
+
+			$html  = '[swfobj src="'.$url.'"'.( ($alt != '') ? ' alt="'.$alt.'"' : '' ).$extras.'] ';
 		}
 		return $html;
 	}
@@ -281,13 +308,109 @@ class SwfObj {
 	function flash_attachment_fields_to_edit($form_fields, $post) {
 		if ( substr($post->post_mime_type, -5) == 'flash' ) {
 			$form_fields['post_title']['required'] = true;
-			unset( $form_fields['post_excerpt'] ); // $form_fields['post_excerpt']['label'] = __('Caption');
-			// $form_fields['post_excerpt']['helps'][] = __('Not currently used.'); // 'Alternate text, e.g. "The Mona Lisa"'
+			unset( $form_fields['post_excerpt'] );
 
 			$form_fields['post_content']['label']   = __('Alternate html');
 			$form_fields['post_content']['helps'][] = __('Displayed when Flash is unavailable, e.g. "&lt;p&gt;Cool Flash game.&lt;/p&gt;"');
+
+			$form_fields['size'] = array( 'label' => __('Size').' <em>'.__('width/height').'</em>',
+			                              'input' => 'html',
+						      'html'  => '<input id="attachments['.$post->ID.'][width]" name="attachments['.$post->ID.'][width]" value="" type="text" class="halfpint">
+			                                         <input id="attachments['.$post->ID.'][height]" name="attachments['.$post->ID.'][height]" value="" type="text" class="halfpint">' );
+
+			// Advanced options
+			$form_fields['advanced_open'] = array( 'label' => __('Advanced Options'),
+			                                       'input' => 'html',
+							       'html'  => '<div id="advanced-'.$post->ID.'" class="toggle-advanced">'.__('Advanced Options').'</div></td></tr></tbody><tbody id="tbody-advanced-'.$post->ID.'" class="swfobj-advanced-options"><tr class="hidden"><td colspan="2">' )
+;
+			$form_fields['align'] = array(
+				'label' => __('Alignment'),
+				'input' => 'html',
+				'html'  => "
+					<input type='radio' name='attachments[$post->ID][align]' id='swfobj-align-none-$post->ID' value='none' />
+					<label for='swfobj-align-none-$post->ID' class='align image-align-none-label'>" . __('None') . "</label>
+					<input type='radio' name='attachments[$post->ID][align]' id='swfobj-align-left-$post->ID' value='left' />
+					<label for='swfobj-align-left-$post->ID' class='align image-align-left-label'>" . __('Left') . "</label>
+					<input type='radio' name='attachments[$post->ID][align]' id='swfobj-align-center-$post->ID' value='center' />
+					<label for='swfobj-align-center-$post->ID' class='align image-align-center-label'>" . __('Center') . "</label>
+					<input type='radio' name='attachments[$post->ID][align]' id='swfobj-align-right-$post->ID' value='right' />
+					<label for='swfobj-align-right-$post->ID' class='align image-align-right-label'>" . __('Right') . "</label>\n",
+			);
+
+			$form_fields['id']    = array( 'label' => __('ID') );
+			$form_fields['name']  = array( 'label' => __('Name') );
+			$form_fields['class'] = array( 'label' => __('Class') );
+
+			$form_fields['required_player_version']['label']   = __('Required Player');
+			$form_fields['required_player_version']['helps'][] = __('Minimum Flash player required to play this object.');
+
+			$form_fields['allowfullscreen'] = array ( 'label' => __('Allow Fullscreen Mode'),
+							  	  'input' => 'html',
+								  'html'  => '
+								  	     <label for="attachments-allowfullscreen-'.$post->ID.'-true">'.__('Yes').'</label>
+									     <input type="radio" id="attachments-allowfullscreen-'.$post->ID.'-true" name="attachments['.$post->ID.'][allowfullscreen]" value="true" />
+								  	     <label for="attachments-allowfullscreen-'.$post->ID.'-false">'.__('No').'</label>
+									     <input type="radio" id="attachments-allowfullscreen-'.$post->ID.'-false" name="attachments['.$post->ID.'][allowfullscreen]" value="false" />' );
+
+			$form_fields['advanced_close'] = array( 'label' => __('Advanced Options'),
+			                                       'input' => 'html',
+							       'html'  => '</tbody><tbody><tr class="hidden"><td colspan="2">' );
+
+
+
+/*
+		                              'express_install_swf' => $defaults['express_install_swf']
+*/
 		}
 		return $form_fields;
+	}
+
+	function swfobj_upload_header () { ?>
+		
+<!-- SwfObj Plugin -->
+<style type="text/css">
+.swfobj-advanced-options {
+border-top: 1px solid #B6B6B6; }
+
+.swfobj-advanced-options th {
+color: #444470; }
+
+.swfobj-advanced-options .hidden,
+.advanced_open th span,
+tr.advanced_close {
+display: none; }
+
+.advanced_open td {
+font-style: italic;
+font-weight: bold;
+color: #1D3C7B;
+cursor: pointer; }
+
+input.halfpint {
+width: 222px !important; }
+</style>
+<script type="text/javascript">
+<!--
+jQuery(function($){
+	$('.swfobj-advanced-options').hide();
+	$('.toggle-advanced').html('<?php _e('Show Advanced Options'); ?>');
+	$('.toggle-advanced').click(function() {
+		postID = $(this).attr('id');
+		if ( '<?php _e('Show Advanced Options'); ?>' == $(this).text() ) {
+			$('#tbody-'+postID).show();
+			// $('#tbody-'+postID).slideDown('fast');
+			$(this).html('<?php _e('Hide Advanced Options'); ?>');
+		}
+		else {
+			$('#tbody-'+postID).hide();
+			// $('#tbody-'+postID).slideUp('fast');
+			$(this).html('<?php _e('Show Advanced Options'); ?>');
+		}
+	});
+});
+-->
+</script>
+<?php
 	}
 
 } // end SwfObj class
@@ -327,7 +450,7 @@ function type_form_flash() {
 }
 
 
-//Initialize the admin panel
+// Initialize the admin panel
 if (!function_exists("swfobj_ap")) {
     function swfobj_ap() {
         global $swfobj;
@@ -350,6 +473,9 @@ if (isset($swfobj)) {
 	add_action('activate_swfobj/swfobj.php',  array(&$swfobj, 'init'));
         add_action('media_buttons', array(&$swfobj, 'addMediaButton'), 20);
         add_action('media_upload_flash', array(&$swfobj, 'media_upload_flash'));
+
+	add_action("admin_head_media_upload_type_form", array(&$swfobj, 'swfobj_upload_header'), 50);
+	add_action("admin_head", array(&$swfobj, 'swfobj_upload_header'), 50);
 
 	// Filters
 	add_filter('post_mime_types', array(&$swfobj, 'modify_post_mime_types'));
