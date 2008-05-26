@@ -3,7 +3,7 @@
 Plugin Name: SwfObj
 Plugin URI: http://svn.wp-plugins.org/swfobj/
 Description: Easily insert Flash media using the media toolbar and shortcode. Uses the SWF Object 2.0 library for greater browser compatability.
-Version: 0.3
+Version: 0.4
 Author: Matt Carpenter
 Author URI: http://orangesplotch.com/
 */
@@ -91,16 +91,17 @@ class SwfObj {
 		                              'class' => false,
 		                              'align' => false,
 		                              'required_player_version' => $defaults['required_player_version'],
-		                              'express_install_swf' => $defaults['express_install_swf'] /*,
+		                              'express_install_swf' => $defaults['express_install_swf'],
+		                              'quality' => false,
+		                              'bgcolor' => false,
+		                              'getvars' => false /*,
 // these options are not yet supported
     * play
     * loop
     * menu
-    * quality
     * scale
     * salign
     * wmode
-    * bgcolor
     * base
     * swliveconnect
     * flashvars
@@ -116,10 +117,12 @@ class SwfObj {
 
 		$swfobj = '
     <object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" id="'.$id.'" width="'.$width.'" height="'.$height.'"'.($class?' class="'.$class.'"':'').($align?' align="'.$align.'"':'').($name?' name="'.$name.'"':'').'>
-      <param name="movie" value="'.$src.'" />'.(($allowfullscreen=='true')?'
-      <param name="allowFullScreen" value="true" />':'').'
+      <param name="movie" value="'.$src.(($getvars)?'?'.$getvars.'"':'').'" />'.(($allowfullscreen=='true')?'
+      <param name="allowFullScreen" value="true" />':'').(($bgcolor)?'
+      <param name="bgcolor" value="'.$bgcolor.'" />':'').(($quality)?'
+      <param name="quality" value="'.$quality.'" />':'').'
       <!--[if !IE]>-->
-      <object type="application/x-shockwave-flash" data="'.$src.'" width="'.$width.'" height="'.$height.'"'.(($allowfullscreen=='true')?' allowFullScreen="true"':'').'>
+      <object type="application/x-shockwave-flash" data="'.$src.(($getvars)?'?'.$getvars.'"':'').'" width="'.$width.'" height="'.$height.'"'.(($allowfullscreen=='true')?' allowFullScreen="true"':'').(($quality)?' quality="'.$quality.'"':'').(($bgcolor)?' bgcolor="'.$bgcolor.'"':'').'>
       <!--<![endif]-->
         <p>'.$alt.'</p>
       <!--[if !IE]>-->
