@@ -84,7 +84,10 @@ For more detailed instructions, visit the [plugin website](http://orangesplotch.
 * Initial release.
 
 == Screenshots ==
-No screenshots available yet.
+1. SwfObj adds a Flash media type to the media library.
+2. SwfObj allows easy embedding of Flash content into posts using media buttons.
+3. Advanced options for embedding Flash content are also available.
+4. You can change the default settings for embedding Flash content.
 
 == Frequently Asked Questions ==
 
