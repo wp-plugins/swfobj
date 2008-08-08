@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: SwfObj
-Plugin URI: http://svn.wp-plugins.org/swfobj/
+Plugin URI: http://orangesplotch.com/blog/swfobj/
 Description: Easily insert Flash media using the media toolbar and shortcode. Uses the SWF Object 2.0 library for greater browser compatability.
 Version: 0.4
 Author: Matt Carpenter
@@ -85,7 +85,6 @@ class SwfObj {
 		                              'width' => $defaults['width'],
 		                              'height' => $defaults['height'],
 		                              'alt' => $defaults['alt'],
-		                              'allowfullscreen' => $defaults['allowfullscreen'],
 		                              'id' => 'swfobj_'.count($registered_objects),
 		                              'name' => false,
 		                              'class' => false,
@@ -94,35 +93,63 @@ class SwfObj {
 		                              'express_install_swf' => $defaults['express_install_swf'],
 		                              'quality' => false,
 		                              'bgcolor' => false,
-		                              'getvars' => false /*,
-// these options are not yet supported
-    * play
-    * loop
-    * menu
-    * scale
-    * salign
-    * wmode
-    * base
-    * swliveconnect
-    * flashvars
-    * devicefont [ http://www.adobe.com/cfusion/knowledgebase/index.cfm?id=tn_13331 ]
-    * allowscriptaccess [ http://www.adobe.com/cfusion/knowledgebase/index.cfm?id=tn_16494 ] and [ http://www.adobe.com/go/kb402975 ]
-    * seamlesstabbing [ http://www.adobe.com/support/documentation/en/flashplayer/7/releasenotes.html ]
-    * allownetworking [ http://livedocs.adobe.com/flash/9.0/main/00001079.html ] 
-*/
-		), $atts));
+		                              'getvars' => false,
+		                              'scale' => false,
+		                              'salign' => false,
+		                              'wmode' => false,
+		                              'base' => false,
+		                              'allownetworking' => false,
+		                              'allowscriptacces' => false,
+		                              // The following parameters are true/false only
+		                              // TODO: Check if they are set to true or false, if not, ignore them?
+		                              'allowfullscreen' => $defaults['allowfullscreen'],
+		                              'flashvars' => false,
+		                              'loop' => false,
+		                              'menu' => false,
+		                              'play' => false,
+		                              'swliveconnect' => false,
+		                              'seamlesstabbing' => false,
+		                              'devicefont' => false ), $atts));
+    
+		$extraparams = array( 'align' => false,
+		                      'allowfullscreen' => 'false',
+		                      'bgcolor' => false,
+		                      'class' => false,
+		                      'getvars' => false,
+		                      'quality' => false,
+		                      'flashvars' => false,
+		                      'name' => false,
+		                      'scale' => false,
+		                      'salign' => false,
+		                      'loop' => false,
+		                      'menu' => false,
+		                      'play' => false,
+		                      'wmode' => false,
+		                      'base' => false,
+		                      'swliveconnect' => false,
+		                      'seamlesstabbing' => false,
+		                      'allownetworking' => false,
+		                      'allowscriptaccess' => false,
+		                      'devicefont' => false );
+		$params     = '';
+		$attributes = '';
+    
+		// loop through all params and get value
+		foreach( $extraparams as $param => $default ){
+			if( ${$param} !== false && ${$param} != $default ){
+				$params     .= "\n      ".'<param name="'.$param.'" value="'.${$param}.'" />';
+				$attributes .= ' '.$param.'="'.${$param}.'"';
+			}
+		}
 
 		// Add this object to the array so it will be registered in the header
 		$registered_objects[]  = array('id' => $id, 'required_player_version' => $required_player_version, 'express_install_swf' => $express_install_swf);
 
 		$swfobj = '
     <object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" id="'.$id.'" width="'.$width.'" height="'.$height.'"'.($class?' class="'.$class.'"':'').($align?' align="'.$align.'"':'').($name?' name="'.$name.'"':'').'>
-      <param name="movie" value="'.$src.(($getvars)?'?'.$getvars.'"':'').'" />'.(($allowfullscreen=='true')?'
-      <param name="allowFullScreen" value="true" />':'').(($bgcolor)?'
-      <param name="bgcolor" value="'.$bgcolor.'" />':'').(($quality)?'
-      <param name="quality" value="'.$quality.'" />':'').'
+      <param name="movie" value="'.$src.(($getvars)?'?'.$getvars.'"':'').'" />'.$params.'
       <!--[if !IE]>-->
-      <object type="application/x-shockwave-flash" data="'.$src.(($getvars)?'?'.$getvars.'"':'').'" width="'.$width.'" height="'.$height.'"'.(($allowfullscreen=='true')?' allowFullScreen="true"':'').(($quality)?' quality="'.$quality.'"':'').(($bgcolor)?' bgcolor="'.$bgcolor.'"':'').'>
+      <object type="application/x-shockwave-flash" data="'.$src.(($getvars)?'?'.$getvars.'"':'').'" width="'.$width.'" height="'.$height.'"'.$attributes.'>
       <!--<![endif]-->
         <p>'.$alt.'</p>
       <!--[if !IE]>-->

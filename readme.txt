@@ -4,7 +4,7 @@ Donate link: http://orangesplotch.com/freelunch
 Tags: embed, flash, flex, insert, media button, shortcode, swf, swfobject, upload
 Requires at least: 2.5
 Tested up to: 2.6
-Stable tag: 0.3
+Stable tag: 0.4
 
 Insert Flash content into WordPress using shortcodes.
 
@@ -48,27 +48,50 @@ Click on the Flash media button above a post to upload and embed Flash media in 
 
 The following attributes are available for use in the swfobj shortcode. If an attribute is not included, the default value is used if available. Otherwise the attribute is simply not included in the embedded content. To modify attributes, go to the `Settings > SwfObj` page.
 
-= Attributes =
-
+= Main Attributes =
 * **src** *(required)* The URL of your swf
 * **height** The height of your object. *Default is 400px.*
 * **width** The width of your object. *Default is 300px.*
 * **alt** Alternative content to display.
-* **allowfullscreen** Whether fullscreen mode is enabled. *Default is false.*
 * **id** The id to use on the object.
 * **name** The name to use on the object.
 * **class** The class name to use on the object.
 * **align** The alignment of the object.
-* **required_player_version** The minimum Flash player required to play the object.*Default is 8.0.0*
-* **express_install_swf** The swf to replace the object with if the viewer doesn't have the minimum Flash player installed.
+* **required\_player\_version** The minimum Flash player required to play the object. *Default is 8.0.0*
+* **express\_install\_swf** The swf to replace the object with if the viewer doesn't have the minimum Flash player installed.
+* **getvars** GET variables to be appended to the .swf file in the src attribute.
 
 = Examples =
 `[swfobj src="movie.swf"]`
 `[swfobj src="movie.swf" height="250" width="400"]`
 
+= Additional Attributes =
+
+Additionally, the following Flash specific parameters can be set.
+
+* **play**
+* **loop**
+* **menu**
+* **quality**
+* **scale**
+* **salign**
+* **wmode**
+* **bgcolor**
+* **base**
+* **swliveconnect**
+* **flashvars**
+* **devicefont**
+* **allowscriptaccess**
+* **seamlesstabbing**
+* **allowfullscreen**
+* **allownetworking**
+
 For more detailed instructions, visit the [plugin website](http://orangesplotch.com/blog/swfobj/ "plugin webpage")
 
 == Version History ==
+
+= Version 0.4 =
+* Added support for all available Flash parameters.
 
 = Version 0.3 =
 * Better support of auto-generated shortcode from the media library.
