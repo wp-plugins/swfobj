@@ -17,7 +17,7 @@ This plugin enables inserting flash content into WordPress posts and pages with 
 *	Easy install
 *	Upload and embed Flash media using WordPress's native media tools
 *	Insert Flash objects with simple short code
-*	Support most Flash param options including allowFullscreen
+*	Supports all Flash param options including flashvars, and allowFullscreen
 *       Granular level of control allows easy overriding of default options
 *	Generates `<object>` code for RSS compatibility	
 *	Uses SWFObject 2.0 for greater browser support
@@ -64,6 +64,7 @@ The following attributes are available for use in the swfobj shortcode. If an at
 = Examples =
 `[swfobj src="movie.swf"]`
 `[swfobj src="movie.swf" height="250" width="400"]`
+
 
 = Additional Attributes =
 
