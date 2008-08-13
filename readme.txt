@@ -4,7 +4,7 @@ Donate link: http://orangesplotch.com/freelunch
 Tags: embed, flash, flex, insert, media button, shortcode, swf, swfobject, upload
 Requires at least: 2.5
 Tested up to: 2.6
-Stable tag: 0.4
+Stable tag: 0.5
 
 Insert Flash content into WordPress using shortcodes.
 
@@ -20,7 +20,7 @@ This plugin enables inserting flash content into WordPress posts and pages with 
 *	Supports all Flash param options including flashvars, and allowFullscreen
 *       Granular level of control allows easy overriding of default options
 *	Generates `<object>` code for RSS compatibility	
-*	Uses SWFObject 2.0 for greater browser support
+*	Uses SWFObject 2.1 for greater browser support
 
 Insert Flash content into a post or page using the Flash media button, or simple shortcode:
 
@@ -90,6 +90,9 @@ Additionally, the following Flash specific parameters can be set.
 For more detailed instructions, visit the [plugin website](http://orangesplotch.com/blog/swfobj/ "plugin webpage")
 
 == Version History ==
+
+= Version 0.5 = 
+* Updated to swfobject version 2.1
 
 = Version 0.4 =
 * Added support for all available Flash parameters.

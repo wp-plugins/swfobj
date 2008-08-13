@@ -2,8 +2,8 @@
 /*
 Plugin Name: SwfObj
 Plugin URI: http://orangesplotch.com/blog/swfobj/
-Description: Easily insert Flash media using the media toolbar and shortcode. Uses the SWF Object 2.0 library for greater browser compatability.
-Version: 0.4
+Description: Easily insert Flash media using the media toolbar and shortcode. Uses the SWF Object 2.1 library for greater browser compatability.
+Version: 0.5
 Author: Matt Carpenter
 Author URI: http://orangesplotch.com/
 */
