@@ -114,7 +114,6 @@ class SwfObj {
 		$extraparams = array( 'align' => false,
 		                      'allowfullscreen' => 'false',
 		                      'bgcolor' => false,
-		                      'class' => false,
 		                      'getvars' => false,
 		                      'quality' => false,
 		                      'flashvars' => false,
@@ -175,12 +174,6 @@ class SwfObj {
 			<div class="updated"><p><strong><?php _e('Options Updated', 'swfobj'); ?></strong></p></div>
 			<?php
 		}
-
-/*
-		'name' => false,
-		'class' => false,
-		'align' => false,
-*/
 
 		?>
 <style type="text/css">
@@ -351,8 +344,7 @@ class SwfObj {
 			// Advanced options
 			$form_fields['advanced_open'] = array( 'label' => __('Advanced Options'),
 			                                       'input' => 'html',
-							       'html'  => '<div id="advanced-'.$post->ID.'" class="toggle-advanced">'.__('Advanced Options').'</div></td></tr></tbody><tbody id="tbody-advanced-'.$post->ID.'" class="swfobj-advanced-options"><tr class="hidden"><td colspan="2">' )
-;
+							       'html'  => '<div id="advanced-'.$post->ID.'" class="toggle-advanced">'.__('Advanced Options').'</div></td></tr></tbody><tbody id="tbody-advanced-'.$post->ID.'" class="swfobj-advanced-options"><tr class="hidden"><td colspan="2">' );
 			$form_fields['align'] = array(
 				'label' => __('Alignment'),
 				'input' => 'html',
@@ -385,12 +377,6 @@ class SwfObj {
 			$form_fields['advanced_close'] = array( 'label' => __('Advanced Options'),
 			                                       'input' => 'html',
 							       'html'  => '</tbody><tbody><tr class="hidden"><td colspan="2">' );
-
-
-
-/*
-		                              'express_install_swf' => $defaults['express_install_swf']
-*/
 		}
 		return $form_fields;
 	}
