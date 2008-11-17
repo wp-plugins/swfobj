@@ -288,9 +288,13 @@ class SwfObj {
 
 	function modify_media_send_to_editor($html) {
 		if ( isset($_POST['send']) ) {
+
 			$keys     = array_keys($_POST['send']);
 			$send_id  = (int) array_shift($keys);
 			$flashobj = $_POST['attachments'][$send_id];
+
+			// only process Flash objects here
+			if ( isset($flashobj['media_type']) && $flashobj['media_type'] == 'application/x-shockwave-flash' ) {
 			
 			$url      = $flashobj['url'];
 			$title    = stripslashes( htmlspecialchars ($flashobj['post_title'], ENT_QUOTES));
@@ -324,6 +328,8 @@ class SwfObj {
 			}
 
 			$html  = '[swfobj src="'.$url.'"'.( ($alt != '') ? ' alt="'.$alt.'"' : '' ).$extras.'] ';
+
+			}
 		}
 		return $html;
 	}
@@ -342,9 +348,11 @@ class SwfObj {
 			                                         <input id="attachments['.$post->ID.'][height]" name="attachments['.$post->ID.'][height]" value="" type="text" class="halfpint">' );
 
 			// Advanced options
+			//   sneaking in a hidden media_type input so only flash items are processed 
+			//   by this plugin when they are inserted in the post.
 			$form_fields['advanced_open'] = array( 'label' => __('Advanced Options'),
 			                                       'input' => 'html',
-							       'html'  => '<div id="advanced-'.$post->ID.'" class="toggle-advanced">'.__('Advanced Options').'</div></td></tr></tbody><tbody id="tbody-advanced-'.$post->ID.'" class="swfobj-advanced-options"><tr class="hidden"><td colspan="2">' );
+							       'html'  => '<div id="advanced-'.$post->ID.'" class="toggle-advanced">'.__('Advanced Options').'</div></td></tr></tbody><tbody id="tbody-advanced-'.$post->ID.'" class="swfobj-advanced-options"><tr class="hidden"><td colspan="2"><input type="hidden" name="attachments['.$post->ID.'][media_type]" value="application/x-shockwave-flash" />' );
 			$form_fields['align'] = array(
 				'label' => __('Alignment'),
 				'input' => 'html',
