@@ -3,7 +3,7 @@
 Plugin Name: SwfObj
 Plugin URI: http://orangesplotch.com/blog/swfobj/
 Description: Easily insert Flash media using the media toolbar and shortcode. Uses the SWF Object 2.1 library for greater browser compatability.
-Version: 0.6
+Version: 0.7
 Author: Matt Carpenter
 Author URI: http://orangesplotch.com/
 */
@@ -150,7 +150,7 @@ class SwfObj {
       <!--[if !IE]>-->
       <object type="application/x-shockwave-flash" data="'.$src.(($getvars)?'?'.$getvars.'"':'').'" width="'.$width.'" height="'.$height.'"'.$attributes.'>
       <!--<![endif]-->
-        <p>'.$alt.'</p>
+        '.$alt.'
       <!--[if !IE]>-->
       </object>
       <!--<![endif]-->
@@ -255,14 +255,48 @@ class SwfObj {
 		}
 
 		if ( !empty($_POST['insertonlybutton']) ) {
-			$href = $_POST['insertonly']['href'];
-			if ( !empty($href) && !strpos($href, '://') )
-				$href = "http://$href";
-			$title = attribute_escape($_POST['insertonly']['title']);
-			if ( empty($title) )
-				$title = basename($href);
-			if ( !empty($title) && !empty($href) )
-				$html = "[swfobj src='$href' title='$title']";
+
+			$src      = $_POST['insertonly']['src'];
+			$title    = stripslashes( htmlspecialchars ($_POST['insertonly']['post_title'], ENT_QUOTES));
+			$alt      = stripslashes( htmlspecialchars ($_POST['insertonly']['post_content'], ENT_QUOTES));
+
+			if ( !empty($src) && !strpos($src, '://') ) {
+				$src = "http://$src";
+			}
+
+			// append any additional properties passed to the object.
+			// I don't like that I'm doing the same thing here in two places
+			// TODO: Need to make this so it only happens in one location.
+			$extras   = '';
+			if ( !empty($_POST['insertonly']['width']) && intval($_POST['insertonly']['width']) ) {
+				$extras .= ' width="'.stripslashes( htmlspecialchars ($_POST['insertonly']['width'], ENT_QUOTES)).'"';
+			}
+			if ( !empty($_POST['insertonly']['height']) && intval($_POST['insertonly']['height']) ) {
+				$extras .= ' height="'.stripslashes( htmlspecialchars ($_POST['insertonly']['height'], ENT_QUOTES)).'"';
+			}
+			if ( !empty($_POST['insertonly']['id']) ) {
+				$extras .= ' id="'.stripslashes( htmlspecialchars ($_POST['insertonly']['id'], ENT_QUOTES)).'"';
+			}
+			if ( !empty($_POST['insertonly']['name']) ) {
+				$extras .= ' name="'.stripslashes( htmlspecialchars ($_POST['insertonly']['name'], ENT_QUOTES)).'"';
+			}
+			if ( !empty($_POST['insertonly']['class']) ) {
+				$extras .= ' class="'.stripslashes( htmlspecialchars ($_POST['insertonly']['class'], ENT_QUOTES)).'"';
+			}
+			if ( isset($_POST['insertonly']['align']) ) {
+				$extras .= ' align="'.$_POST['insertonly']['align'].'"';
+			}
+			if ( isset($_POST['insertonly']['allowfullscreen']) ) {
+				$extras .= ' allowfullscreen="'.$_POST['insertonly']['allowfullscreen'].'"';
+			}
+			if ( !empty($_POST['insertonly']['required_player_version']) ) {
+				$extras .= ' required_player_version="'.stripslashes( htmlspecialchars ($_POST['insertonly']['required_player_version'], ENT_QUOTES)).'"';
+			}
+
+			if ( !empty($src) ) {
+				$html  = '[swfobj src="'.$src.'"'.( ($alt != '') ? ' alt="'.$alt.'"' : '' ).$extras.'] ';
+			}
+
 			return media_send_to_editor($html);
 		}
 
@@ -275,8 +309,13 @@ class SwfObj {
 				$errors = $return;
 		}
 
-		if ( isset($_POST['save']) )
+		if ( isset($_POST['save']) ) {
 			$errors['upload_notice'] = __('Saved.');
+		}
+
+		if ( isset($_GET['tab']) && $_GET['tab'] == 'type_url' ) {
+			return wp_iframe( 'media_upload_type_url_form', 'flash', $errors, $id );
+		}
 
 		return wp_iframe( 'media_upload_type_form', 'flash', $errors, $id );
 	}
@@ -286,7 +325,7 @@ class SwfObj {
 		return $post_mime_types;
 	}
 
-	function modify_media_send_to_editor($html) {
+	function flash_media_send_to_editor($html) {
 		if ( isset($_POST['send']) ) {
 
 			$keys     = array_keys($_POST['send']);
@@ -296,7 +335,7 @@ class SwfObj {
 			// only process Flash objects here
 			if ( isset($flashobj['media_type']) && $flashobj['media_type'] == 'application/x-shockwave-flash' ) {
 			
-			$url      = $flashobj['url'];
+			$src      = $flashobj['src'];
 			$title    = stripslashes( htmlspecialchars ($flashobj['post_title'], ENT_QUOTES));
 			$alt      = stripslashes( htmlspecialchars ($flashobj['post_content'], ENT_QUOTES));
 
@@ -327,8 +366,7 @@ class SwfObj {
 				$extras .= ' required_player_version="'.stripslashes( htmlspecialchars ($flashobj['required_player_version'], ENT_QUOTES)).'"';
 			}
 
-			$html  = '[swfobj src="'.$url.'"'.( ($alt != '') ? ' alt="'.$alt.'"' : '' ).$extras.'] ';
-
+			$html  = '[swfobj src="'.$src.'"'.( ($alt != '') ? ' alt="'.$alt.'"' : '' ).$extras.'] ';
 			}
 		}
 		return $html;
@@ -338,6 +376,7 @@ class SwfObj {
 		if ( substr($post->post_mime_type, -5) == 'flash' ) {
 			$form_fields['post_title']['required'] = true;
 			unset( $form_fields['post_excerpt'] );
+			unset( $form_fields['url'] );
 
 			$form_fields['post_content']['label']   = __('Alternate html');
 			$form_fields['post_content']['helps'][] = __('Displayed when Flash is unavailable, e.g. "&lt;p&gt;Cool Flash game.&lt;/p&gt;"');
@@ -352,7 +391,7 @@ class SwfObj {
 			//   by this plugin when they are inserted in the post.
 			$form_fields['advanced_open'] = array( 'label' => __('Advanced Options'),
 			                                       'input' => 'html',
-							       'html'  => '<div id="advanced-'.$post->ID.'" class="toggle-advanced">'.__('Advanced Options').'</div></td></tr></tbody><tbody id="tbody-advanced-'.$post->ID.'" class="swfobj-advanced-options"><tr class="hidden"><td colspan="2"><input type="hidden" name="attachments['.$post->ID.'][media_type]" value="application/x-shockwave-flash" />' );
+							       'html'  => '<div id="advanced-'.$post->ID.'" class="toggle-advanced">'.__('Advanced Options').'</div></td></tr></tbody><tbody id="tbody-advanced-'.$post->ID.'" class="swfobj-advanced-options"><tr class="hidden"><td colspan="2"><input type="hidden" name="attachments['.$post->ID.'][media_type]" value="application/x-shockwave-flash" /><input type="hidden" name="attachments['.$post->ID.'][src]" value="'.$post->guid.'" />' );
 			$form_fields['align'] = array(
 				'label' => __('Alignment'),
 				'input' => 'html',
@@ -447,20 +486,20 @@ if (class_exists("SwfObj")) {
 
 function type_form_flash() {
 	return '
+
 	<table class="describe"><tbody>
 		<tr>
 			<th valign="top" scope="row" class="label">
-				<span class="alignleft"><label for="insertonly[href]">' . __('Flash URL') . '</label></span>
+				<span class="alignleft"><label for="insertonly[src]">' . __('Flash URL') . '</label></span>
 				<span class="alignright"><abbr title="required" class="required">*</abbr></span>
 			</th>
-			<td class="field"><input id="insertonly[href]" name="insertonly[href]" value="" type="text"></td>
+			<td class="field"><input id="insertonly[src]" name="insertonly[src]" value="" type="text"></td>
 		</tr>
 		<tr>
 			<th valign="top" scope="row" class="label">
-				<span class="alignleft"><label for="insertonly[title]">' . __('Title') . '</label></span>
-				<span class="alignright"><abbr title="required" class="required">*</abbr></span>
+				<span class="alignleft"><label for="insertonly[post_title]">' . __('Title') . '</label></span>
 			</th>
-			<td class="field"><input id="insertonly[title]" name="insertonly[title]" value="" type="text"></td>
+			<td class="field"><input id="insertonly[post_title]" name="insertonly[post_title]" value="" type="text"></td>
 		</tr>
 		<tr><td></td><td class="help">' . __('Link text, e.g. "Lucy on YouTube"') . '</td></tr>
 		<tr>
@@ -473,18 +512,108 @@ function type_form_flash() {
 ';
 }
 
+// Function changed in WP 2.7
+function type_url_form_flash() {
+    //return type_form_flash();
+
+return '
+	<table class="describe"><tbody>
+		<tr>
+			<th valign="top" scope="row" class="label">
+				<span class="alignleft"><label for="insertonly[src]">' . __('Flash URL') . '</label></span>
+				<span class="alignright"><abbr title="required" class="required">*</abbr></span>
+			</th>
+			<td class="field"><input id="insertonly[src]" name="insertonly[src]" value="" type="text"></td>
+		</tr>
+
+		<tr class="post_title form-required">
+			<th valign="top" scope="row" class="label"><label for="insertonly[post_title]"><span class="alignleft">Title</span><span class="alignright"><abbr title="required" class="required">*</abbr></span><br class="clear" /></label></th>
+			<td class="field"><input type="text" id="insertonly[post_title]" name="insertonly[post_title]" value="" aria-required="true" /></td>
+		</tr>
+		<tr class="post_content">
+			<th valign="top" scope="row" class="label"><label for="insertonly[post_content]"><span class="alignleft">Alternate html</span><span class="alignright"></span><br class="clear" /></label></th>
+
+			<td class="field"><textarea type="text" id="insertonly[post_content]" name="insertonly[post_content]"></textarea><p class="help">Displayed when Flash is unavailable, e.g. "&lt;p&gt;Cool Flash game.&lt;/p&gt;"</p></td>
+		</tr>
+		<tr class="size">
+			<th valign="top" scope="row" class="label"><label for="insertonly[size]"><span class="alignleft">Size <em>width/height</em></span><span class="alignright"></span><br class="clear" /></label></th>
+			<td class="field"><input id="insertonly[width]" name="insertonly[width]" value="" type="text" class="halfpint">
+
+			                                         <input id="insertonly[height]" name="insertonly[height]" value="" type="text" class="halfpint"></td>
+		</tr>
+		<tr class="advanced_open">
+			<th valign="top" scope="row" class="label"><label for="insertonly[advanced_open]"><span class="alignleft">Advanced Options</span><span class="alignright"></span><br class="clear" /></label></th>
+			<td class="field"><div id="advanced-insertonly" class="toggle-advanced">Advanced Options</div></td></tr></tbody><tbody id="tbody-advanced-insertonly" class="swfobj-advanced-options"><tr class="hidden"><td colspan="2"><input type="hidden" name="insertonly[media_type]" value="application/x-shockwave-flash" /></td>
+		</tr>
+		<tr class="align">
+			<th valign="top" scope="row" class="label"><label for="insertonly[align]"><span class="alignleft">Alignment</span><span class="alignright"></span><br class="clear" /></label></th>
+
+			<td class="field">
+					<input type="radio" name="insertonly[align]" id="swfobj-align-none-insertonly" value="none" />
+					<label for="swfobj-align-none-insertonly" class="align image-align-none-label">None</label>
+					<input type="radio" name="insertonly[align]" id="swfobj-align-left-insertonly" value="left" />
+
+					<label for="swfobj-align-left-insertonly" class="align image-align-left-label">Left</label>
+					<input type="radio" name="insertonly[align]" id="swfobj-align-center-insertonly" value="center" />
+					<label for="swfobj-align-center-insertonly" class="align image-align-center-label">Center</label>
+					<input type="radio" name="insertonly[align]" id="swfobj-align-right-insertonly" value="right" />
+					<label for="swfobj-align-right-insertonly" class="align image-align-right-label">Right</label>
+</td>
+		</tr>
+		<tr class="id">
+			<th valign="top" scope="row" class="label"><label for="insertonly[id]"><span class="alignleft">ID</span><span class="alignright"></span><br class="clear" /></label></th>
+			<td class="field"><input type="text" id="insertonly[id]" name="insertonly[id]" value=""/></td>
+		</tr>
+
+		<tr class="name">
+			<th valign="top" scope="row" class="label"><label for="insertonly[name]"><span class="alignleft">Name</span><span class="alignright"></span><br class="clear" /></label></th>
+			<td class="field"><input type="text" id="insertonly[name]" name="insertonly[name]" value=""/></td>
+		</tr>
+		<tr class="class">
+			<th valign="top" scope="row" class="label"><label for="insertonly[class]"><span class="alignleft">Class</span><span class="alignright"></span><br class="clear" /></label></th>
+			<td class="field"><input type="text" id="insertonly[class]" name="insertonly[class]" value=""/></td>
+		</tr>
+
+		<tr class="required_player_version">
+			<th valign="top" scope="row" class="label"><label for="insertonly[required_player_version]"><span class="alignleft">Required Player</span><span class="alignright"></span><br class="clear" /></label></th>
+			<td class="field"><input type="text" id="insertonly[required_player_version]" name="insertonly[required_player_version]" value=""/><p class="help">Minimum Flash player required to play this object.</p></td>
+		</tr>
+		<tr class="allowfullscreen">
+			<th valign="top" scope="row" class="label"><label for="insertonly[allowfullscreen]"><span class="alignleft">Allow Fullscreen Mode</span><span class="alignright"></span><br class="clear" /></label></th>
+			<td class="field">
+
+								  	     <label for="attachments-allowfullscreen-insertonly-true">Yes</label>
+									     <input type="radio" id="attachments-allowfullscreen-insertonly-true" name="insertonly[allowfullscreen]" value="true" />
+								  	     <label for="attachments-allowfullscreen-insertonly-false">No</label>
+									     <input type="radio" id="attachments-allowfullscreen-insertonly-false" name="insertonly[allowfullscreen]" value="false" /></td>
+		</tr>
+		<tr class="advanced_close">
+			<th valign="top" scope="row" class="label"><label for="insertonly[advanced_close]"><span class="alignleft">Advanced Options</span><span class="alignright"></span><br class="clear" /></label></th>
+
+			<td class="field"></tbody><tbody><tr class="hidden"><td colspan="2"></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td>
+				<input type="submit" class="button" name="insertonlybutton" value="' . attribute_escape(__('Insert into Post')) . '" />
+			</td>
+		</tr>
+	</tbody></table>
+';
+
+}
 
 // Initialize the admin panel
 if (!function_exists("swfobj_ap")) {
-    function swfobj_ap() {
-        global $swfobj;
-        if (!isset($swfobj)) {
-            return;
-        }
-        if (function_exists('add_options_page')) {
-            add_options_page(__('SwfObj Default Settings', 'swfobj'), 'SwfObj', 8, basename(__FILE__), array(&$swfobj, 'swfobj_options_page'));
-        }
-    }   
+	function swfobj_ap() {
+		global $swfobj;
+		if (!isset($swfobj)) {
+			return;
+		}
+		if (function_exists('add_options_page')) {
+			add_options_page(__('SwfObj Default Settings', 'swfobj'), 'SwfObj', 8, basename(__FILE__), array(&$swfobj, 'swfobj_options_page'));
+		}
+	}
 }
 
 // Actions and Filters
@@ -504,7 +633,7 @@ if (isset($swfobj)) {
 	// Filters
 	add_filter('post_mime_types', array(&$swfobj, 'modify_post_mime_types'));
 	add_filter('async_upload_flash', 'get_media_item', 10, 2);
-	add_filter('media_send_to_editor', array(&$swfobj, 'modify_media_send_to_editor'));
+	add_filter('media_send_to_editor', array(&$swfobj, 'flash_media_send_to_editor'));
 	add_filter('attachment_fields_to_edit', array(&$swfobj, 'flash_attachment_fields_to_edit'), 10, 2);
 
 	// Shortcodes
