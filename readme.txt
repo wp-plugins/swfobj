@@ -20,7 +20,7 @@ This plugin enables inserting flash content into WordPress posts and pages with 
 *	Supports all Flash param options including flashvars, and allowFullscreen
 *       Granular level of control allows easy overriding of default options
 *	Generates `<object>` code for RSS compatibility	
-*	Uses SWFObject 2.1 for greater browser support
+*	Uses SWFObject 2.2 for greater browser support
 
 Insert Flash content into a post or page using the Flash media button, or simple shortcode:
 
@@ -90,6 +90,15 @@ Additionally, the following Flash specific parameters can be set.
 For more detailed instructions, visit the [plugin website](http://orangesplotch.com/blog/swfobj/ "plugin webpage")
 
 == Version History ==
+
+= Version 0.8 =
+* Updated to swfobject version 2.2
+
+= Version 0.7 =
+* Updated for WordPress 2.7
+
+= Version 0.6 =
+* Various bug fixes
 
 = Version 0.5 = 
 * Updated to swfobject version 2.1
