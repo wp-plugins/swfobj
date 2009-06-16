@@ -3,10 +3,21 @@
 Plugin Name: SwfObj
 Plugin URI: http://orangesplotch.com/blog/swfobj/
 Description: Easily insert Flash media using the media toolbar and shortcode. Uses the SWF Object 2.2 library for greater browser compatability.
-Version: 0.7
+Version: 0.8
 Author: Matt Carpenter
 Author URI: http://orangesplotch.com/
 */
+
+// Pre-2.6 compatibility, set WP_PLUGIN_DIR variable
+if ( ! defined( 'WP_CONTENT_URL' ) )
+	define( 'WP_CONTENT_URL', get_option( 'siteurl' ) . '/wp-content' );
+if ( ! defined( 'WP_CONTENT_DIR' ) )
+	define( 'WP_CONTENT_DIR', ABSPATH . 'wp-content' );
+if ( ! defined( 'WP_PLUGIN_URL' ) )
+	define( 'WP_PLUGIN_URL', WP_CONTENT_URL. '/plugins' );
+if ( ! defined( 'WP_PLUGIN_DIR' ) )
+	define( 'WP_PLUGIN_DIR', WP_CONTENT_DIR . '/plugins' );
+
 
 if (!class_exists("SwfObj")) {
 
@@ -30,7 +41,7 @@ class SwfObj {
 		                        'alt' => '<p>'.__('The Flash plugin is required to view this object.', 'swfobj').'</p>',
 		                        'allowfullscreen' => 'false',
 		                        'required_player_version' => '8.0.0',
-	 	                        'express_install_swf' => get_bloginfo('wpurl').'/wp-content/plugins/swfobj/'.'expressInstall.swf' );
+	 	                        'express_install_swf' => WP_PLUGIN_URL.'/swfobj/expressInstall.swf' );
 		$saved_options = get_option($this->admin_options_saved);
 		if (!empty($saved_options)) {
 			foreach($saved_options as $key => $val) {
@@ -55,7 +66,7 @@ class SwfObj {
 		echo '
 
 		<!-- SwfObj Plugin version '.SWFOBJ_VERSION.' -->
-		<script type="text/javascript" src="'.get_bloginfo('wpurl').'/wp-content/plugins/swfobj/swfobject.js"></script>'."\n";
+		<script type="text/javascript" src="'.WP_PLUGIN_URL.'/swfobj/swfobject.js"></script>'."\n";
 	}
 
 	// Add Javascript to end of page to register all swf objects.
@@ -240,7 +251,7 @@ class SwfObj {
 		$media_swfobj_iframe_src = apply_filters('media_swfobj_iframe_src', "$media_upload_iframe_src&amp;type=flash");
 		$media_swfobj_title = __('Add Flash content', 'swfobj');
 
-		echo '<a href="'.$media_swfobj_iframe_src.'&amp;TB_iframe=true&amp;height=500&amp;width=640" class="thickbox" title="'.$media_swfobj_title.'"><img src="'.get_bloginfo('wpurl').'/wp-content/plugins/swfobj/'.'media-button-flash.gif" alt="'.$media_swfobj_title.'"></a>';
+		echo '<a href="'.$media_swfobj_iframe_src.'&amp;TB_iframe=true&amp;height=500&amp;width=640" class="thickbox" title="'.$media_swfobj_title.'"><img src="'.WP_PLUGIN_URL.'/swfobj/media-button-flash.gif" alt="'.$media_swfobj_title.'"></a>';
 	}
 
 	function media_upload_flash() {
