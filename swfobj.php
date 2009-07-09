@@ -3,7 +3,7 @@
 Plugin Name: SwfObj
 Plugin URI: http://orangesplotch.com/blog/swfobj/
 Description: Easily insert Flash media using the media toolbar and shortcode. Uses the SWF Object 2.2 library for greater browser compatability.
-Version: 0.8
+Version: 0.9
 Author: Matt Carpenter
 Author URI: http://orangesplotch.com/
 */
@@ -110,7 +110,7 @@ class SwfObj {
 		                              'wmode' => false,
 		                              'base' => false,
 		                              'allownetworking' => false,
-		                              'allowscriptacces' => false,
+		                              'allowscriptaccess' => false,
 		                              // The following parameters are true/false only
 		                              // TODO: Check if they are set to true or false, if not, ignore them?
 		                              'allowfullscreen' => $defaults['allowfullscreen'],
@@ -516,7 +516,7 @@ function type_form_flash() {
 		<tr>
 			<td></td>
 			<td>
-				<input type="submit" class="button" name="insertonlybutton" value="' . attribute_escape(__('Insert into Post')) . '" />
+				<input type="submit" class="button" name="insertonlybutton" value="' . esc_attr__('Insert into Post') . '" />
 			</td>
 		</tr>
 	</tbody></table>
@@ -606,7 +606,7 @@ return '
 		<tr>
 			<td></td>
 			<td>
-				<input type="submit" class="button" name="insertonlybutton" value="' . attribute_escape(__('Insert into Post')) . '" />
+				<input type="submit" class="button" name="insertonlybutton" value="' . esc_attr__('Insert into Post') . '" />
 			</td>
 		</tr>
 	</tbody></table>
