@@ -3,7 +3,7 @@
 Plugin Name: SwfObj
 Plugin URI: http://orangesplotch.com/blog/swfobj/
 Description: Easily insert Flash media using the media toolbar and shortcode. Uses the SWF Object 2.2 library for greater browser compatability.
-Version: 0.9
+Version: 0.9.2
 Author: Matt Carpenter
 Author URI: http://orangesplotch.com/
 */
@@ -24,6 +24,7 @@ if (!class_exists("SwfObj")) {
 class SwfObj {
 
 	var $registered_objects; // holds all swf objects in the content
+	var $flag_static_embed   = true; // whether to embed swf using dynamic or static method
 	var $admin_options_saved = 'SwfObjAdminOptions';
 
 	// Constructor
@@ -31,6 +32,7 @@ class SwfObj {
 		load_plugin_textdomain( 'swfobj' );
 
 		global $registered_objects;
+		global $flag_static_embed;
 		$registered_objects = array();
 	}
 
@@ -39,9 +41,11 @@ class SwfObj {
 		$admin_options = array( 'height' => '300',
 		                        'width' => '400',
 		                        'alt' => '<p>'.__('The Flash plugin is required to view this object.', 'swfobj').'</p>',
-		                        'allowfullscreen' => 'false',
 		                        'required_player_version' => '8.0.0',
-	 	                        'express_install_swf' => WP_PLUGIN_URL.'/swfobj/expressInstall.swf' );
+	 	                        'express_install_swf' => WP_PLUGIN_URL.'/swfobj/expressInstall.swf',
+		                        'allowfullscreen' => 'false',
+		                        'wmode' => 'window',
+	 	                        'dynamic_embed' => 'false' );
 		$saved_options = get_option($this->admin_options_saved);
 		if (!empty($saved_options)) {
 			foreach($saved_options as $key => $val) {
@@ -72,24 +76,70 @@ class SwfObj {
 	// Add Javascript to end of page to register all swf objects.
 	function swfobj_footer() {
 		global $registered_objects;
+		global $flag_static_embed;
 
 		// register any swf files on the page
-		if (count($registered_objects) > 0) {
-			echo '
-			<script type="text/javascript">';
-
-			foreach ($registered_objects as $swf) {
+		if ($flag_static_embed) {
+			if (count($registered_objects) > 0) {
 				echo '
-				swfobject.registerObject("'.$swf['id'].'", "'.$swf['required_player_version'].'", "'.$swf['express_install_swf'].'");';
+				<script type="text/javascript">';
+
+				foreach ($registered_objects as $swf) {
+					echo '
+					swfobject.registerObject("'.$swf['id'].'", "'.$swf['required_player_version'].'", "'.$swf['express_install_swf'].'");';
+				}
+				echo '
+				</script>'."\n";
 			}
-			echo '
-			</script>'."\n";
+		}
+		else {
+			if (count($registered_objects) > 0) {
+				echo '
+				<!-- SwfObj: Embed SWFs in Post -->
+				<script type="text/javascript">';
+
+				foreach ($registered_objects as $swf) {
+					// TODO: Need to implement the items that aren't required
+ 					$flashvars  = '';
+					$params     = '';
+					$attributes = '';
+
+					if ( $swf['flashvars'] && count($swf['flashvars']) > 0 ){
+						foreach ($swf['flashvars'] as $key => $var) {
+							$flashvars .= "\n					  $key: '".str_replace("\n",'\n',$var)."',";
+						}
+						$flashvars = substr($flashvars, 0, -1); // take off the last comma
+					}
+					if ( $swf['params'] && count($swf['params']) > 0 ){
+						foreach ($swf['params'] as $key => $var) {
+							$params .= "\n					  $key: '$var',";
+						}
+						$params = substr($params, 0, -1); // take off the last comma
+					}
+					if ( $swf['attributes'] && count($swf['attributes']) > 0 ){
+						foreach ($swf['attributes'] as $key => $var) {
+							$attributes .= "\n					  $key: '$var',";
+						}
+						$attributes = substr($attributes, 0, -1); // take off the last comma
+					}
+
+					echo '
+					'.$swf['id'].'_flashvars  = {'.$flashvars.' };
+					'.$swf['id'].'_params     = {'.$params.' };
+					'.$swf['id'].'_attributes = {'.$attributes.' };
+
+					swfobject.embedSWF("'.$swf['swfUrl'].'", "'.$swf['id'].'", "'.$swf['width'].'", "'.$swf['height'].'", "'.$swf['version'].'", "'.$swf['expressInstallSwfurl'].'", '.$swf['id'].'_flashvars, '.$swf['id'].'_params, '.$swf['id'].'_attributes);';
+				}
+				echo '
+				</script>'."\n";
+			}
 		}
 	}
 
 	// [swfobj] shortcode handler
 	function swfobj_func($atts, $content='') {
 		global $registered_objects;
+		global $flag_static_embed;
 		$defaults = $this->get_options();
 
 		extract(shortcode_atts(array( 'src' => '',
@@ -107,10 +157,11 @@ class SwfObj {
 		                              'getvars' => false,
 		                              'scale' => false,
 		                              'salign' => false,
-		                              'wmode' => false,
+		                              'wmode' => $defaults['wmode'],
 		                              'base' => false,
 		                              'allownetworking' => false,
 		                              'allowscriptaccess' => false,
+		                              'callbackFn' => false,
 		                              // The following parameters are true/false only
 		                              // TODO: Check if they are set to true or false, if not, ignore them?
 		                              'allowfullscreen' => $defaults['allowfullscreen'],
@@ -120,7 +171,8 @@ class SwfObj {
 		                              'play' => false,
 		                              'swliveconnect' => false,
 		                              'seamlesstabbing' => false,
-		                              'devicefont' => false ), $atts));
+		                              'devicefont' => false,
+		                              'dynamic_embed' => $defaults['dynamic_embed'] ), $atts));
     
 		$extraparams = array( 'align' => false,
 		                      'allowfullscreen' => 'false',
@@ -134,28 +186,33 @@ class SwfObj {
 		                      'loop' => false,
 		                      'menu' => false,
 		                      'play' => false,
-		                      'wmode' => false,
+		                      'wmode' => 'window',
 		                      'base' => false,
 		                      'swliveconnect' => false,
 		                      'seamlesstabbing' => false,
 		                      'allownetworking' => false,
 		                      'allowscriptaccess' => false,
-		                      'devicefont' => false );
+		                      'devicefont' => false,
+		                      'callbackFn' => false );
 		$params     = '';
 		$attributes = '';
     
-		// loop through all params and get value
-		foreach( $extraparams as $param => $default ){
-			if( ${$param} !== false && ${$param} != $default ){
-				$params     .= "\n      ".'<param name="'.$param.'" value="'.${$param}.'" />';
-				$attributes .= ' '.$param.'="'.${$param}.'"';
+		$flag_static_embed = !($dynamic_embed == 'true');
+		if ($flag_static_embed) {
+			// SWF is embedded statically (directly in the HTML)
+    
+			// loop through all params and get value
+			foreach( $extraparams as $param => $default ){
+				if( ${$param} !== false && ${$param} != $default ){
+					$params     .= "\n      ".'<param name="'.$param.'" value="'.${$param}.'" />';
+					$attributes .= ' '.$param.'="'.${$param}.'"';
+				}
 			}
-		}
 
-		// Add this object to the array so it will be registered in the header
-		$registered_objects[]  = array('id' => $id, 'required_player_version' => $required_player_version, 'express_install_swf' => $express_install_swf);
+			// Add this object to the array so it will be registered in the header
+			$registered_objects[]  = array('id' => $id, 'required_player_version' => $required_player_version, 'express_install_swf' => $express_install_swf);
 
-		$swfobj = '
+			$swfobj = '
     <object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" id="'.$id.'" width="'.$width.'" height="'.$height.'"'.($class?' class="'.$class.'"':'').($align?' align="'.$align.'"':'').($name?' name="'.$name.'"':'').'>
       <param name="movie" value="'.$src.(($getvars)?'?'.$getvars.'"':'').'" />'.$params.'
       <!--[if !IE]>-->
@@ -167,6 +224,61 @@ class SwfObj {
       <!--<![endif]-->
     </object>
 ';
+		}
+		else {
+			// SWF is embedded dynamically (using Javascript)
+			// Only place the alternative content on the page
+
+			// loop through all params and get values
+			$params     = array();
+			$flash_vars = array();
+			foreach( $extraparams as $param => $default ){
+				// make sure you aren't adding anything you don't need here
+				// params are different in the dynamic version
+				if( ${$param} !== false && ${$param} != $default ){
+					// extract flashvars out separately
+					if ( $param == 'flashvars' ) {
+	 					$tmpvars = explode('&#038;', ${$param});
+						if ( count($tmpvars) < 2 ) {
+							// make sure they didn't separate vars with &amp; instead of $#038;
+							$tmpvars = explode('&amp;', ${$param});
+						}
+	 					foreach ($tmpvars as $tmpvar) {
+	 						$tmpvararray = explode('=', $tmpvar);
+							$flash_vars[ $tmpvararray[0] ] = $tmpvararray[1];
+	 					}
+					}
+					else {
+						$params[$param] = ${$param};
+					}
+				}
+			}
+
+			// Get all attribute values
+			$attributes = array();
+			if ($name) {
+				$attributes['name'] = $name;
+			}
+
+			// Add this object to the array so it will be registered
+			// (swfUrl, id, width, height, version, expressInstallSwfurl, flashvars, params, attributes, callbackFn)
+			$registered_objects[]  = array( 'swfUrl' => $src,
+			                                'id' => $id,
+			                                'width' => $width,
+			                                'height' => $height,
+			                                'version' => $required_player_version,
+			                                'expressInstallSwfurl' => $express_install_swf,
+			                                'flashvars' => $flash_vars, // TODO: Need to implement these
+			                                'params' => $params, // TODO: Need to verify this
+			                                'attributes' => $attribute, // TODO: Need to implement these
+			                                'callbackFn' => $callbackFn );
+
+			$swfobj = '
+    <div id="'.$id.'">
+      '.$alt.'
+    </div>
+';
+		}
 
 		return $swfobj;
 	}
@@ -196,42 +308,65 @@ class SwfObj {
       <input type="hidden" name="options_update" value="1" />
 
       <table class="form-table">
+      <tr class="odd">
+        <th scope="row" valign="top"><?php _e('Default Embedding Mode', 'swfobj'); ?></th>
+        <td>
+	    <label for="dynamic_embed_no"><input type="radio" id="dynamic_embed_no" name="dynamic_embed" value="false"<?php if ($options['dynamic_embed'] == 'false'): ?> checked="checked"<?php endif; ?> /> <?php _e('Static Publishing', 'swfobj'); ?></label><br />
+	    <label for="dynamic_embed_yes"><input type="radio" id="dynamic_embed_yes" name="dynamic_embed" value="true"<?php if ($options['dynamic_embed'] == 'true'): ?> checked="checked"<?php endif; ?> /> <?php _e('Dynamic Publishing', 'swfobj'); ?></label>
+        <td>
+          <ol>
+            <li><strong>Static publishing: </strong><em><?php _e('embeds both Flash content and alternative content using standards compliant markup, and uses JavaScript to resolve the issues that markup alone cannot solve', 'swfobj'); ?></em></li>
+            <li><strong>Dynamic publishing: </strong><em><?php _e('is based on marked up alternative content and uses JavaScript to replace this content with Flash content if the minimal Flash Player version is installed and enough JavaScript support is available (similar like previous versions of SWFObject and UFO) ', 'swfobj'); ?></em></li>
+          </ol>
+        <!-- http://code.google.com/p/swfobject/wiki/documentation#Should_I_use_the_static_or_dynamic_publishing_method? --></td>
+      </tr>
       <tr>
         <th scope="row" valign="top"><?php _e('Default Width', 'swfobj'); ?></th>
-	<td><input type="text" name="width" value="<?php echo $options['width']; ?>" size="40" /></td>
-	<td><em><?php _e('Default width of embedded Flash content.', 'swfobj'); ?></em></td>
+        <td><input type="text" name="width" value="<?php echo $options['width']; ?>" size="40" /></td>
+        <td><em><?php _e('Default width of embedded Flash content.', 'swfobj'); ?></em></td>
       </tr>
       <tr class="odd">
         <th scope="row" valign="top"><?php _e('Default Height', 'swfobj'); ?></th>
-	<td><input type="text" name="height" value="<?php echo $options['height']; ?>" size="40" /></td>
-	<td><em><?php _e('Default height of embedded Flash content.', 'swfobj'); ?></em></td>
+        <td><input type="text" name="height" value="<?php echo $options['height']; ?>" size="40" /></td>
+        <td><em><?php _e('Default height of embedded Flash content.', 'swfobj'); ?></em></td>
       </tr>
       <tr>
         <th scope="row" valign="top"><?php _e('Alternative Content', 'swfobj'); ?></th>
-	<td><input type="text" name="alt" value="<?php echo $options['alt']; ?>" size="40" /></td>
-	<td><em><?php _e('Alternative HTML content to display if Flash plugin is not installed in the browser.', 'swfobj'); ?></em></td>
+        <td><input type="text" name="alt" value="<?php echo $options['alt']; ?>" size="40" /></td>
+        <td><em><?php _e('Alternative HTML content to display if Flash plugin is not installed in the browser.', 'swfobj'); ?></em></td>
       </tr>
       <tr class="odd">
         <th scope="row" valign="top"><?php _e('Required Flash Player', 'swfobj'); ?></th>
-	<td><input type="text" name="required_player_version" value="<?php echo $options['required_player_version']; ?>" size="40" /></td>
-	<td><em><?php _e('Default minimum Flash player required by the browser.', 'swfobj'); ?></em></td>
+        <td><input type="text" name="required_player_version" value="<?php echo $options['required_player_version']; ?>" size="40" /></td>
+        <td><em><?php _e('Default minimum Flash player required by the browser.', 'swfobj'); ?></em></td>
       </tr>
       <tr>
         <th scope="row" valign="top"><?php _e('Object CSS Class', 'swfobj'); ?></th>
-	<td><input type="text" name="class" value="<?php echo $options['class']; ?>" size="40" /></td>
-	<td><em><?php _e('The CSS class to apply to the embedded Flash object.', 'swfobj'); ?></em></td>
+        <td><input type="text" name="class" value="<?php echo $options['class']; ?>" size="40" /></td>
+        <td><em><?php _e('The CSS class to apply to the embedded Flash object.', 'swfobj'); ?></em></td>
       </tr>
       <tr class="odd">
         <th scope="row" valign="top"><?php _e('Express Install Swf', 'swfobj'); ?></th>
-	<td><input type="text" name="express_install_swf" value="<?php echo $options['express_install_swf']; ?>" size="40" /></td>
-	<td><em><?php _e('Swf shown when viewer needs to upgrade their player.', 'swfobj'); ?></em></td>
+        <td><input type="text" name="express_install_swf" value="<?php echo $options['express_install_swf']; ?>" size="40" /></td>
+        <td><em><?php _e('Swf shown when viewer needs to upgrade their player.', 'swfobj'); ?></em></td>
       </tr>
       <tr>
         <th scope="row" valign="top"><?php _e('Allow Fullscreen Mode', 'swfobj'); ?></th>
-	<td>
+        <td>
 	    <label for="allowfullscreen_yes"><input type="radio" id="allowfullscreen_yes" name="allowfullscreen" value="true"<?php if ($options['allowfullscreen'] == 'true'): ?> checked="checked"<?php endif; ?> /> <?php _e('Yes', 'swfobj'); ?></label> &nbsp; &nbsp; &nbsp;
 	    <label for="allowfullscreen_no"><input type="radio" id="allowfullscreen_no" name="allowfullscreen" value="false"<?php if ($options['allowfullscreen'] == 'false'): ?> checked="checked"<?php endif; ?> /> <?php _e('No', 'swfobj'); ?></label>
-	<td><em><?php _e('Allow fullscreen mode by default.', 'swfobj'); ?></em></td>
+        <td><em><?php _e('Allow fullscreen mode by default.', 'swfobj'); ?></em></td>
+      </tr>
+      <tr class="odd">
+        <th scope="row" valign="top"><?php _e('Default wmode', 'swfobj'); ?></th>
+        <td>
+          <select name="wmode">
+            <option value="window"<?php if($options['wmode'] == 'window'): ?> selected="selected"<?php endif; ?>>window</option>
+            <option value="opaque"<?php if($options['wmode'] == 'opaque'): ?> selected="selected"<?php endif; ?>>opaque</option>
+            <option value="transparent"<?php if($options['wmode'] == 'transparent'): ?> selected="selected"<?php endif; ?>>transparent</option>
+          </select>
+        </td>
+        <td><em><?php _e('If you are experiencing trouble with Flash content overlapping HTML layers, set this to "opaque".', 'swfobj'); ?></em></td>
       </tr>
       </table>
 
@@ -635,8 +770,8 @@ if (isset($swfobj)) {
 	add_action('wp_footer', array(&$swfobj, 'swfobj_footer'), 100);
 	add_action('admin_menu', 'swfobj_ap', 100);
 	add_action('activate_swfobj/swfobj.php',  array(&$swfobj, 'init'));
-        add_action('media_buttons', array(&$swfobj, 'addMediaButton'), 20);
-        add_action('media_upload_flash', array(&$swfobj, 'media_upload_flash'));
+	add_action('media_buttons', array(&$swfobj, 'addMediaButton'), 20);
+	add_action('media_upload_flash', array(&$swfobj, 'media_upload_flash'));
 
 	add_action("admin_head_media_upload_type_form", array(&$swfobj, 'swfobj_upload_header'), 50);
 	add_action("admin_head", array(&$swfobj, 'swfobj_upload_header'), 50);
@@ -651,6 +786,7 @@ if (isset($swfobj)) {
 	// check if shortcodes exist just so this plugin doesn't kill WordPress on versions < 2.5
 	if ( function_exists('add_shortcode') ) {
 		add_shortcode('swfobj', array(&$swfobj, 'swfobj_func'));
+		add_shortcode('flash', array(&$swfobj, 'swfobj_func'));
 	}
 
 }

@@ -1,10 +1,10 @@
-=== SwfObj Plugin ===
+=== SwfObj Plugin: for embedding Flash objects ===
 Contributors: Matt Carpenter
 Donate link: http://orangesplotch.com/freelunch
 Tags: embed, flash, flex, insert, media button, shortcode, swf, swfobject, upload
 Requires at least: 2.5
-Tested up to: 2.8
-Stable tag: 0.9
+Tested up to: 2.9
+Stable tag: 0.9.2
 
 Insert Flash content into WordPress using shortcodes.
 
@@ -17,9 +17,10 @@ This plugin enables inserting flash content into WordPress posts and pages with 
 *	Easy install
 *	Upload and embed Flash media using WordPress's native media tools
 *	Insert Flash objects with simple short code
-*	Supports all Flash param options including flashvars, and allowFullscreen
+*	Supports all Flash param options including flashvars, wmode and allowFullscreen
 *       Granular level of control allows easy overriding of default options
-*	Generates `<object>` code for RSS compatibility	
+*	Generates `<object>` code for RSS compatibility
+*       Can embed objects dynamically using javascript or statically
 *	Uses SWFObject 2.2 for greater browser support
 
 Insert Flash content into a post or page using the Flash media button, or simple shortcode:
@@ -38,7 +39,7 @@ This section describes how to install the plugin and get it working.
 2. Activate the plugin through the 'Plugins' menu in WordPress
 3. Set the default options for your embedded objects on the `Settings > SwfObj` page.
 4. Add Flash media using the new Flash media button above the post editor.
-3. Use the swfobj shortcode in your posts.
+5. Use the swfobj shortcode in your posts.
 
 For detailed instructions including a list of available attributes, visit the [plugin website](http://orangesplotch.com/blog/swfobj/ "plugin webpage")
 
@@ -86,10 +87,18 @@ Additionally, the following Flash specific parameters can be set.
 * **seamlesstabbing**
 * **allowfullscreen**
 * **allownetworking**
+* **dynamic_embed**
+* **callbackFn**
 
 For more detailed instructions, visit the [plugin website](http://orangesplotch.com/blog/swfobj/ "plugin webpage")
 
 == Version History ==
+
+= Version 0.9.2 =
+* Added dynamic embedding option.
+
+= Version 0.9.1 =
+* Merged with "Flash Shorttags" plugin.
 
 = Version 0.9 =
 * allowscriptaccess bug fix
