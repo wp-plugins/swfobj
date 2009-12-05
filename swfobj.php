@@ -3,7 +3,7 @@
 Plugin Name: SwfObj
 Plugin URI: http://orangesplotch.com/blog/swfobj/
 Description: Easily insert Flash media using the media toolbar and shortcode. Uses the SWF Object 2.2 library for greater browser compatability.
-Version: 0.9
+Version: 0.9.1
 Author: Matt Carpenter
 Author URI: http://orangesplotch.com/
 */
@@ -39,9 +39,10 @@ class SwfObj {
 		$admin_options = array( 'height' => '300',
 		                        'width' => '400',
 		                        'alt' => '<p>'.__('The Flash plugin is required to view this object.', 'swfobj').'</p>',
-		                        'allowfullscreen' => 'false',
 		                        'required_player_version' => '8.0.0',
-	 	                        'express_install_swf' => WP_PLUGIN_URL.'/swfobj/expressInstall.swf' );
+	 	                        'express_install_swf' => WP_PLUGIN_URL.'/swfobj/expressInstall.swf',
+		                        'allowfullscreen' => 'false',
+		                        'wmode' => 'window' );
 		$saved_options = get_option($this->admin_options_saved);
 		if (!empty($saved_options)) {
 			foreach($saved_options as $key => $val) {
@@ -107,7 +108,7 @@ class SwfObj {
 		                              'getvars' => false,
 		                              'scale' => false,
 		                              'salign' => false,
-		                              'wmode' => false,
+		                              'wmode' => $defaults['wmode'],
 		                              'base' => false,
 		                              'allownetworking' => false,
 		                              'allowscriptaccess' => false,
@@ -134,7 +135,7 @@ class SwfObj {
 		                      'loop' => false,
 		                      'menu' => false,
 		                      'play' => false,
-		                      'wmode' => false,
+		                      'wmode' => 'window',
 		                      'base' => false,
 		                      'swliveconnect' => false,
 		                      'seamlesstabbing' => false,
@@ -198,40 +199,51 @@ class SwfObj {
       <table class="form-table">
       <tr>
         <th scope="row" valign="top"><?php _e('Default Width', 'swfobj'); ?></th>
-	<td><input type="text" name="width" value="<?php echo $options['width']; ?>" size="40" /></td>
-	<td><em><?php _e('Default width of embedded Flash content.', 'swfobj'); ?></em></td>
+        <td><input type="text" name="width" value="<?php echo $options['width']; ?>" size="40" /></td>
+        <td><em><?php _e('Default width of embedded Flash content.', 'swfobj'); ?></em></td>
       </tr>
       <tr class="odd">
         <th scope="row" valign="top"><?php _e('Default Height', 'swfobj'); ?></th>
-	<td><input type="text" name="height" value="<?php echo $options['height']; ?>" size="40" /></td>
-	<td><em><?php _e('Default height of embedded Flash content.', 'swfobj'); ?></em></td>
+        <td><input type="text" name="height" value="<?php echo $options['height']; ?>" size="40" /></td>
+        <td><em><?php _e('Default height of embedded Flash content.', 'swfobj'); ?></em></td>
       </tr>
       <tr>
         <th scope="row" valign="top"><?php _e('Alternative Content', 'swfobj'); ?></th>
-	<td><input type="text" name="alt" value="<?php echo $options['alt']; ?>" size="40" /></td>
-	<td><em><?php _e('Alternative HTML content to display if Flash plugin is not installed in the browser.', 'swfobj'); ?></em></td>
+        <td><input type="text" name="alt" value="<?php echo $options['alt']; ?>" size="40" /></td>
+        <td><em><?php _e('Alternative HTML content to display if Flash plugin is not installed in the browser.', 'swfobj'); ?></em></td>
       </tr>
       <tr class="odd">
         <th scope="row" valign="top"><?php _e('Required Flash Player', 'swfobj'); ?></th>
-	<td><input type="text" name="required_player_version" value="<?php echo $options['required_player_version']; ?>" size="40" /></td>
-	<td><em><?php _e('Default minimum Flash player required by the browser.', 'swfobj'); ?></em></td>
+        <td><input type="text" name="required_player_version" value="<?php echo $options['required_player_version']; ?>" size="40" /></td>
+        <td><em><?php _e('Default minimum Flash player required by the browser.', 'swfobj'); ?></em></td>
       </tr>
       <tr>
         <th scope="row" valign="top"><?php _e('Object CSS Class', 'swfobj'); ?></th>
-	<td><input type="text" name="class" value="<?php echo $options['class']; ?>" size="40" /></td>
-	<td><em><?php _e('The CSS class to apply to the embedded Flash object.', 'swfobj'); ?></em></td>
+        <td><input type="text" name="class" value="<?php echo $options['class']; ?>" size="40" /></td>
+        <td><em><?php _e('The CSS class to apply to the embedded Flash object.', 'swfobj'); ?></em></td>
       </tr>
       <tr class="odd">
         <th scope="row" valign="top"><?php _e('Express Install Swf', 'swfobj'); ?></th>
-	<td><input type="text" name="express_install_swf" value="<?php echo $options['express_install_swf']; ?>" size="40" /></td>
-	<td><em><?php _e('Swf shown when viewer needs to upgrade their player.', 'swfobj'); ?></em></td>
+        <td><input type="text" name="express_install_swf" value="<?php echo $options['express_install_swf']; ?>" size="40" /></td>
+        <td><em><?php _e('Swf shown when viewer needs to upgrade their player.', 'swfobj'); ?></em></td>
       </tr>
       <tr>
         <th scope="row" valign="top"><?php _e('Allow Fullscreen Mode', 'swfobj'); ?></th>
-	<td>
+        <td>
 	    <label for="allowfullscreen_yes"><input type="radio" id="allowfullscreen_yes" name="allowfullscreen" value="true"<?php if ($options['allowfullscreen'] == 'true'): ?> checked="checked"<?php endif; ?> /> <?php _e('Yes', 'swfobj'); ?></label> &nbsp; &nbsp; &nbsp;
 	    <label for="allowfullscreen_no"><input type="radio" id="allowfullscreen_no" name="allowfullscreen" value="false"<?php if ($options['allowfullscreen'] == 'false'): ?> checked="checked"<?php endif; ?> /> <?php _e('No', 'swfobj'); ?></label>
-	<td><em><?php _e('Allow fullscreen mode by default.', 'swfobj'); ?></em></td>
+        <td><em><?php _e('Allow fullscreen mode by default.', 'swfobj'); ?></em></td>
+      </tr>
+      <tr class="odd">
+        <th scope="row" valign="top"><?php _e('Default wmode', 'swfobj'); ?></th>
+        <td>
+          <select name="wmode">
+            <option value="window"<?php if($options['wmode'] == 'window'): ?> selected="selected"<?php endif; ?>>window</option>
+            <option value="opaque"<?php if($options['wmode'] == 'opaque'): ?> selected="selected"<?php endif; ?>>opaque</option>
+            <option value="transparent"<?php if($options['wmode'] == 'transparent'): ?> selected="selected"<?php endif; ?>>transparent</option>
+          </select>
+        </td>
+        <td><em><?php _e('If you are experiencing trouble with Flash content overlapping HTML layers, set this to "opaque".', 'swfobj'); ?></em></td>
       </tr>
       </table>
 
@@ -635,8 +647,8 @@ if (isset($swfobj)) {
 	add_action('wp_footer', array(&$swfobj, 'swfobj_footer'), 100);
 	add_action('admin_menu', 'swfobj_ap', 100);
 	add_action('activate_swfobj/swfobj.php',  array(&$swfobj, 'init'));
-        add_action('media_buttons', array(&$swfobj, 'addMediaButton'), 20);
-        add_action('media_upload_flash', array(&$swfobj, 'media_upload_flash'));
+	add_action('media_buttons', array(&$swfobj, 'addMediaButton'), 20);
+	add_action('media_upload_flash', array(&$swfobj, 'media_upload_flash'));
 
 	add_action("admin_head_media_upload_type_form", array(&$swfobj, 'swfobj_upload_header'), 50);
 	add_action("admin_head", array(&$swfobj, 'swfobj_upload_header'), 50);
@@ -651,6 +663,7 @@ if (isset($swfobj)) {
 	// check if shortcodes exist just so this plugin doesn't kill WordPress on versions < 2.5
 	if ( function_exists('add_shortcode') ) {
 		add_shortcode('swfobj', array(&$swfobj, 'swfobj_func'));
+		add_shortcode('flash', array(&$swfobj, 'swfobj_func'));
 	}
 
 }
