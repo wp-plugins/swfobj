@@ -4,7 +4,7 @@ Donate link: http://orangesplotch.com/freelunch
 Tags: embed, flash, flex, insert, media button, shortcode, swf, swfobject, upload
 Requires at least: 2.5
 Tested up to: 2.9
-Stable tag: 0.9.2
+Stable tag: 1.0.1
 
 Insert Flash content into WordPress using shortcodes.
 
@@ -22,13 +22,14 @@ This plugin enables inserting flash content into WordPress posts and pages with 
 *	Generates `<object>` code for RSS compatibility
 *       Can embed objects dynamically using javascript or statically
 *	Uses SWFObject 2.2 for greater browser support
+* HTML5 compliant, allowing enhanced alt content for browsers without Flash plugin
 
 Insert Flash content into a post or page using the Flash media button, or simple shortcode:
 
 `[swfobj src="movie.swf"]`
 `[swfobj src="movie.swf" height="250" width="400"]`
 
-For more information visit the [plugin website](http://orangesplotch.com/blog/swfobj/ "plugin webpage")
+For more information visit the [plugin website](http://orangesplotch.com/swfobj/ "plugin webpage")
 
 
 == Installation ==
@@ -41,7 +42,7 @@ This section describes how to install the plugin and get it working.
 4. Add Flash media using the new Flash media button above the post editor.
 5. Use the swfobj shortcode in your posts.
 
-For detailed instructions including a list of available attributes, visit the [plugin website](http://orangesplotch.com/blog/swfobj/ "plugin webpage")
+For detailed instructions including a list of available attributes, visit the [plugin website](http://orangesplotch.com/swfobj/ "plugin webpage")
 
 == Implementation ==
 
@@ -90,9 +91,16 @@ Additionally, the following Flash specific parameters can be set.
 * **dynamic_embed**
 * **callbackFn**
 
-For more detailed instructions, visit the [plugin website](http://orangesplotch.com/blog/swfobj/ "plugin webpage")
+For more detailed instructions, visit the [plugin website](http://orangesplotch.com/swfobj/ "plugin webpage")
 
 == Version History ==
+
+= Version 1.0.1 = 
+* Changed how alt content is embedded, fixing various errors users were experiencing
+* swfobject.js is loaded via wp_equeue_script
+* uses built in version of swfobject.js in Wordpress 3.0+
+* Plugin now works with SSL installations of WordPress
+* Can embed both static and dynamic content on the same page
 
 = Version 0.9.2 =
 * Added dynamic embedding option.
@@ -139,6 +147,11 @@ For more detailed instructions, visit the [plugin website](http://orangesplotch.
 4. You can change the default settings for embedding Flash content.
 
 == Frequently Asked Questions ==
+
+= Can I use the ___ embed option? How?
+All Flash embed tags are made available through the SwfObj plugin. Most are set using the identical option in the swfobj embed code. For example, to set wmode to transpart you would use the following shortcode:
+[swfobj ... wmode="transparent"]
+For more documentation, refer to the [plugin website](http://orangesplotch.com/swfobj/ "plugin webpage"). If you do come across an option that isn't currently supported, please let me know.
 
 = Why isn't it working? I'm using WP 2.3 =
 This plugin uses WordPress's shortcode API. A feature which was added to WordPress in version 2.5. All versions of WordPress prior to this release, unfortunately, are incompatible with this plugin. Sorry.

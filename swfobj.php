@@ -3,20 +3,38 @@
 Plugin Name: SwfObj
 Plugin URI: http://orangesplotch.com/blog/swfobj/
 Description: Easily insert Flash media using the media toolbar and shortcode. Uses the SWF Object 2.2 library for greater browser compatability.
-Version: 0.9.2
+Version: 1.0.1
 Author: Matt Carpenter
 Author URI: http://orangesplotch.com/
 */
 
-// Pre-2.6 compatibility, set WP_PLUGIN_DIR variable
-if ( ! defined( 'WP_CONTENT_URL' ) )
-	define( 'WP_CONTENT_URL', get_option( 'siteurl' ) . '/wp-content' );
-if ( ! defined( 'WP_CONTENT_DIR' ) )
-	define( 'WP_CONTENT_DIR', ABSPATH . 'wp-content' );
-if ( ! defined( 'WP_PLUGIN_URL' ) )
-	define( 'WP_PLUGIN_URL', WP_CONTENT_URL. '/plugins' );
-if ( ! defined( 'WP_PLUGIN_DIR' ) )
-	define( 'WP_PLUGIN_DIR', WP_CONTENT_DIR . '/plugins' );
+
+	// BEGIN - Pre-2.9 compatibility, set WP_PLUGIN_DIR variable
+	if ( ! function_exists( 'is_ssl' ) ) {
+		function is_ssl() {
+			if ( isset($_SERVER['HTTPS']) ) {
+				if ( 'on' == strtolower($_SERVER['HTTPS']) )
+					return true;
+				if ( '1' == $_SERVER['HTTPS'] )
+					return true;
+			} elseif ( isset($_SERVER['SERVER_PORT']) && ( '443' == $_SERVER['SERVER_PORT'] ) ) {
+				return true;
+			}
+			return false;
+		}
+	}
+	if ( version_compare( get_bloginfo( 'version' ) , '3.0' , '<' ) && is_ssl() ) {
+		$wp_content_url = str_replace( 'http://' , 'https://' , get_option( 'siteurl' ) );
+	} else {
+		$wp_content_url = get_option( 'siteurl' );
+	}
+	$wp_content_url .= '/wp-content';
+	$wp_content_dir = ABSPATH . 'wp-content';
+	$wp_plugin_url = $wp_content_url . '/plugins';
+	$wp_plugin_dir = $wp_content_dir . '/plugins';
+	$wpmu_plugin_url = $wp_content_url . '/mu-plugins';
+	$wpmu_plugin_dir = $wp_content_dir . '/mu-plugins';
+	// END - Pre-2.9 compatibility, set WP_PLUGIN_DIR variable
 
 
 if (!class_exists("SwfObj")) {
@@ -42,7 +60,7 @@ class SwfObj {
 		                        'width' => '400',
 		                        'alt' => '<p>'.__('The Flash plugin is required to view this object.', 'swfobj').'</p>',
 		                        'required_player_version' => '8.0.0',
-	 	                        'express_install_swf' => WP_PLUGIN_URL.'/swfobj/expressInstall.swf',
+	 	                        'express_install_swf' => plugins_url().'/swfobj/expressInstall.swf',
 		                        'allowfullscreen' => 'false',
 		                        'wmode' => 'window',
 	 	                        'dynamic_embed' => 'false' );
@@ -57,20 +75,24 @@ class SwfObj {
 	}
 
 	function init() {
+		// Wordpress 3.0 uses version 2.2 of swfobject.js
+		if ( version_compare( get_bloginfo( 'version' ) , '3.0' , '<' ) ) {
+			wp_enqueue_script('swfobject');
+		}
+		else {
+			// Wordpress < 3.0 uses the older swfobject.js version (2.1)
+			// Use the plugin version of swfobject as it is current
+			wp_deregister_script('swfobject');
+			wp_register_script('swfobject', plugins_url().'/swfobj/swfobject.js', false, '2.2');
+			wp_enqueue_script('swfobject');
+		}
+	}
+
+	function activate() {
 		$this->get_options();
 		?>
 		<div class="updated"><p><strong><?php _e('SwfObj Initialized', 'swfobj'); ?></strong></p></div>
 		<?php
-	}
-
-	// Add SWF Object Javascript file to the page header
-	function swfobj_header() {
-		global $registered_objects;
-
-		echo '
-
-		<!-- SwfObj Plugin version '.SWFOBJ_VERSION.' -->
-		<script type="text/javascript" src="'.WP_PLUGIN_URL.'/swfobj/swfobject.js"></script>'."\n";
 	}
 
 	// Add Javascript to end of page to register all swf objects.
@@ -79,27 +101,19 @@ class SwfObj {
 		global $flag_static_embed;
 
 		// register any swf files on the page
-		if ($flag_static_embed) {
-			if (count($registered_objects) > 0) {
-				echo '
-				<script type="text/javascript">';
+		if (count($registered_objects) > 0) {
+			echo '
+			<!-- SwfObj: Register SWFs on this page. -->
+			<script type="text/javascript">';
 
-				foreach ($registered_objects as $swf) {
+			foreach ($registered_objects as $swf) {
+				if ($swf['embed'] == 'static') {
+					// This swfobj is statically embedded. Simply register the div.
 					echo '
 					swfobject.registerObject("'.$swf['id'].'", "'.$swf['required_player_version'].'", "'.$swf['express_install_swf'].'");';
 				}
-				echo '
-				</script>'."\n";
-			}
-		}
-		else {
-			if (count($registered_objects) > 0) {
-				echo '
-				<!-- SwfObj: Embed SWFs in Post -->
-				<script type="text/javascript">';
-
-				foreach ($registered_objects as $swf) {
-					// TODO: Need to implement the items that aren't required
+				elseif ($swf['embed'] == 'dynamic') {
+					// This swfobj is dynamically embedded. Register and set all swfobj properties.
  					$flashvars  = '';
 					$params     = '';
 					$attributes = '';
@@ -130,14 +144,14 @@ class SwfObj {
 
 					swfobject.embedSWF("'.$swf['swfUrl'].'", "'.$swf['id'].'", "'.$swf['width'].'", "'.$swf['height'].'", "'.$swf['version'].'", "'.$swf['expressInstallSwfurl'].'", '.$swf['id'].'_flashvars, '.$swf['id'].'_params, '.$swf['id'].'_attributes);';
 				}
-				echo '
-				</script>'."\n";
 			}
+			echo '
+			</script>'."\n";
 		}
 	}
 
 	// [swfobj] shortcode handler
-	function swfobj_func($atts, $content='') {
+	function swfobj_func($atts, $content=null) {
 		global $registered_objects;
 		global $flag_static_embed;
 		$defaults = $this->get_options();
@@ -145,8 +159,8 @@ class SwfObj {
 		extract(shortcode_atts(array( 'src' => '',
 		                              'width' => $defaults['width'],
 		                              'height' => $defaults['height'],
-		                              'alt' => $defaults['alt'],
 		                              'id' => 'swfobj_'.count($registered_objects),
+																	'alt' => $defaults['alt'],
 		                              'name' => false,
 		                              'class' => false,
 		                              'align' => false,
@@ -173,7 +187,12 @@ class SwfObj {
 		                              'seamlesstabbing' => false,
 		                              'devicefont' => false,
 		                              'dynamic_embed' => $defaults['dynamic_embed'] ), $atts));
-    
+
+		// pull alt from inner content if it exists
+		if ($content !== null) {
+				 $alt = $content;
+		}
+
 		$extraparams = array( 'align' => false,
 		                      'allowfullscreen' => 'false',
 		                      'bgcolor' => false,
@@ -210,7 +229,7 @@ class SwfObj {
 			}
 
 			// Add this object to the array so it will be registered in the header
-			$registered_objects[]  = array('id' => $id, 'required_player_version' => $required_player_version, 'express_install_swf' => $express_install_swf);
+			$registered_objects[]  = array('id' => $id, 'required_player_version' => $required_player_version, 'express_install_swf' => $express_install_swf, 'embed' => 'static');
 
 			$swfobj = '
     <object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" id="'.$id.'" width="'.$width.'" height="'.$height.'"'.($class?' class="'.$class.'"':'').($align?' align="'.$align.'"':'').($name?' name="'.$name.'"':'').'>
@@ -268,10 +287,11 @@ class SwfObj {
 			                                'height' => $height,
 			                                'version' => $required_player_version,
 			                                'expressInstallSwfurl' => $express_install_swf,
-			                                'flashvars' => $flash_vars, // TODO: Need to implement these
-			                                'params' => $params, // TODO: Need to verify this
-			                                'attributes' => $attribute, // TODO: Need to implement these
-			                                'callbackFn' => $callbackFn );
+			                                'flashvars' => $flash_vars,
+			                                'params' => $params,
+			                                'attributes' => $attribute,
+			                                'callbackFn' => $callbackFn,
+			                                'embed' => 'dynamic' );
 
 			$swfobj = '
     <div id="'.$id.'">
@@ -386,7 +406,7 @@ class SwfObj {
 		$media_swfobj_iframe_src = apply_filters('media_swfobj_iframe_src', "$media_upload_iframe_src&amp;type=flash");
 		$media_swfobj_title = __('Add Flash content', 'swfobj');
 
-		echo '<a href="'.$media_swfobj_iframe_src.'&amp;TB_iframe=true&amp;height=500&amp;width=640" class="thickbox" title="'.$media_swfobj_title.'"><img src="'.WP_PLUGIN_URL.'/swfobj/media-button-flash.gif" alt="'.$media_swfobj_title.'"></a>';
+		echo '<a href="'.$media_swfobj_iframe_src.'&amp;TB_iframe=true&amp;height=500&amp;width=640" class="thickbox" title="'.$media_swfobj_title.'"><img src="'.plugins_url().'/swfobj/media-button-flash.gif" alt="'.$media_swfobj_title.'"></a>';
 	}
 
 	function media_upload_flash() {
@@ -404,7 +424,7 @@ class SwfObj {
 
 			$src      = $_POST['insertonly']['src'];
 			$title    = stripslashes( htmlspecialchars ($_POST['insertonly']['post_title'], ENT_QUOTES));
-			$alt      = stripslashes( htmlspecialchars ($_POST['insertonly']['post_content'], ENT_QUOTES));
+			$alt      = $_POST['insertonly']['post_content'];
 
 			if ( !empty($src) && !strpos($src, '://') ) {
 				$src = "http://$src";
@@ -440,7 +460,7 @@ class SwfObj {
 			}
 
 			if ( !empty($src) ) {
-				$html  = '[swfobj src="'.$src.'"'.( ($alt != '') ? ' alt="'.$alt.'"' : '' ).$extras.'] ';
+				$html  = '[swfobj src="'.$src.'"'.$extras.( ($alt != '') ? ']'.$alt.'[/swfobj]' : '] ');
 			}
 
 			return media_send_to_editor($html);
@@ -483,7 +503,7 @@ class SwfObj {
 			
 			$src      = $flashobj['src'];
 			$title    = stripslashes( htmlspecialchars ($flashobj['post_title'], ENT_QUOTES));
-			$alt      = stripslashes( htmlspecialchars ($flashobj['post_content'], ENT_QUOTES));
+			$alt      = $flashobj['post_content'];
 
 			// append any additional properties passed to the object.
 			$extras   = '';
@@ -512,7 +532,7 @@ class SwfObj {
 				$extras .= ' required_player_version="'.stripslashes( htmlspecialchars ($flashobj['required_player_version'], ENT_QUOTES)).'"';
 			}
 
-			$html  = '[swfobj src="'.$src.'"'.( ($alt != '') ? ' alt="'.$alt.'"' : '' ).$extras.'] ';
+			$html  = '[swfobj src="'.$src.'"'.$extras.( ($alt != '') ? ']'.$alt.'[/swfobj]' : '] ');
 			}
 		}
 		return $html;
@@ -766,10 +786,10 @@ if (!function_exists("swfobj_ap")) {
 if (isset($swfobj)) {
 
 	// Actions
-	add_action('wp_head', array(&$swfobj, 'swfobj_header'), 100);
 	add_action('wp_footer', array(&$swfobj, 'swfobj_footer'), 100);
 	add_action('admin_menu', 'swfobj_ap', 100);
-	add_action('activate_swfobj/swfobj.php',  array(&$swfobj, 'init'));
+	add_action('init', array(&$swfobj, 'init'));
+	add_action('activate_swfobj/swfobj.php',  array(&$swfobj, 'activate'));
 	add_action('media_buttons', array(&$swfobj, 'addMediaButton'), 20);
 	add_action('media_upload_flash', array(&$swfobj, 'media_upload_flash'));
 
