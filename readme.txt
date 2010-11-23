@@ -148,7 +148,7 @@ For more detailed instructions, visit the [plugin website](http://orangesplotch.
 
 == Frequently Asked Questions ==
 
-= Can I use the ___ embed option? How?
+= Can I use the ___ embed option? How? =
 All Flash embed tags are made available through the SwfObj plugin. Most are set using the identical option in the swfobj embed code. For example, to set wmode to transpart you would use the following shortcode:
 [swfobj ... wmode="transparent"]
 For more documentation, refer to the [plugin website](http://orangesplotch.com/swfobj/ "plugin webpage"). If you do come across an option that isn't currently supported, please let me know.
