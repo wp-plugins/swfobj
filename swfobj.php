@@ -3,7 +3,7 @@
 Plugin Name: SwfObj
 Plugin URI: http://orangesplotch.com/blog/swfobj/
 Description: Easily insert Flash media using the media toolbar and shortcode. Uses the SWF Object 2.2 library for greater browser compatability.
-Version: 1.0.1
+Version: 1.0.2
 Author: Matt Carpenter
 Author URI: http://orangesplotch.com/
 */
@@ -90,9 +90,6 @@ class SwfObj {
 
 	function activate() {
 		$this->get_options();
-		?>
-		<div class="updated"><p><strong><?php _e('SwfObj Initialized', 'swfobj'); ?></strong></p></div>
-		<?php
 	}
 
 	// Add Javascript to end of page to register all swf objects.
@@ -487,7 +484,11 @@ class SwfObj {
 	}
 
 	function modify_post_mime_types($post_mime_types) {
-		$post_mime_types['application/x-shockwave-flash'] = array(__('Flash', 'swfobj'), __('Manage Flash', 'swfobj'), __ngettext_noop('Flash (%s)', 'Flash (%s)', 'swfobj'));
+		if ( function_exists( '_n_noop' ) ) :
+			$post_mime_types['application/x-shockwave-flash'] = array(__('Flash', 'swfobj'), __('Manage Flash', 'swfobj'), _n_noop('Flash (%s)', 'Flash (%s)', 'swfobj'));
+		else :
+			$post_mime_types['application/x-shockwave-flash'] = array(__('Flash', 'swfobj'), __('Manage Flash', 'swfobj'), __ngettext_noop('Flash (%s)', 'Flash (%s)', 'swfobj'));
+		endif;
 		return $post_mime_types;
 	}
 

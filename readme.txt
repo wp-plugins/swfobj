@@ -3,8 +3,8 @@ Contributors: Matt Carpenter
 Donate link: http://orangesplotch.com/freelunch
 Tags: embed, flash, flex, insert, media button, shortcode, swf, swfobject, upload
 Requires at least: 2.5
-Tested up to: 3.1
-Stable tag: 1.0.1
+Tested up to: 3.0.3
+Stable tag: 1.0.2
 
 Insert Flash content into WordPress using shortcodes.
 
@@ -94,6 +94,10 @@ Additionally, the following Flash specific parameters can be set.
 For more detailed instructions, visit the [plugin website](http://orangesplotch.com/swfobj/ "plugin webpage")
 
 == Version History ==
+
+= Version 1.0.2 =
+* Fixed a bug in plugin activation
+* No longer using deprecated __ngettext_noop()
 
 = Version 1.0.1 = 
 * Changed how alt content is embedded, fixing various errors users were experiencing
